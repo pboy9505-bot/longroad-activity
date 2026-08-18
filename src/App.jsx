@@ -329,9 +329,9 @@ function CommandMenu({ b, dispatch }) {
         ); })}
       </div>
       <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-        <button className="btn seal" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_OPEN_BAG" })}>Item</button>
-        <button className="btn" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_DEFEND" })}>Defend</button>
-        <button className="btn" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_FLEE" })}>Flee</button>
+        <button className="btn seal" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_OPEN_BAG" })} title="Use a draught, flask, or rare find from the satchel.">Item</button>
+        <button className="btn" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_STRIKE" })} title="A basic weapon attack — always available, never runs out. Your reliable option when spells, ki, or rage are spent.">Strike</button>
+        <button className="btn" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_FLEE" })} title="Try to break contact and escape the fight. Harder against more foes; fleeing a story boss loses the run.">Flee</button>
       </div>
       <div className="sc" style={{ fontSize: 10, color: SEPIA, marginTop: 8, fontStyle: "italic" }}>Hover a move for what it does. Draughts and flasks are drawn from the caravan's stores.</div>
     </div>
@@ -395,10 +395,14 @@ function RoleBoard({ s, dispatch }) {
               <div className="disp" style={{ fontSize: 13 }}>{M.name}</div>
               <div className="sc" style={{ fontSize: 10, color: SEPIA }}>{down ? "down" : M.cls}</div>
             </div>
-            <select className="btn" disabled={down} value={s.roles[p.id] || "drive"} onChange={(e) => dispatch({ type: "SET_ROLE", id: p.id, role: e.target.value })}
-              style={{ flex: 1, padding: "6px 8px", fontSize: 12 }}>
-              {ROLE_ORDER.map((r) => <option key={r} value={r}>{ROLES[r].label}{M.best.includes(r) ? " ✦" : ""}</option>)}
-            </select>
+            <div style={{ flex: 1 }}>
+              <select className="btn" disabled={down} value={s.roles[p.id] || "drive"} onChange={(e) => dispatch({ type: "SET_ROLE", id: p.id, role: e.target.value })}
+                title={ROLES[s.roles[p.id] || "drive"].desc}
+                style={{ width: "100%", padding: "6px 8px", fontSize: 12 }}>
+                {ROLE_ORDER.map((r) => <option key={r} value={r} title={ROLES[r].desc}>{ROLES[r].label}{M.best.includes(r) ? " ✦" : ""}</option>)}
+              </select>
+              {!down && <div className="sc" style={{ fontSize: 10, color: SEPIA, marginTop: 3, lineHeight: 1.35 }}>{ROLES[s.roles[p.id] || "drive"].desc}</div>}
+            </div>
           </div>
         );
       })}

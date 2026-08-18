@@ -163,7 +163,7 @@ const ROSTER = [
   { id: "kass", name: "Kass", cls: "Ranger", blurb: "Ranger of the Sanos verges.",
     maxHp: 44, skills: { survival: 11, perception: 11, stealth: 9, heal: 5, athletics: 7, diplomacy: 2, disable: 1, knowledge: 4 },
     res: { arrows: true, companion: true }, kit: "Precise Shot and Rapid Shot, and a wolf at his heel.",
-    best: ["scout", "forage", "hunt", "water"], tag: "Reads terrain, tracks, and feeds the party off the land.",
+    best: ["scout", "forage", "hunt"], tag: "Reads terrain, tracks, and feeds the party off the land.",
     combat: { hp: 44, ac: 18, touch: 13, atk: 9, init: 4, saves: { fort: 5, ref: 8, will: 3 }, res: {}, moves: ["aimedShot", "rapidShot", "cripplingShot", "wolfMaul"], role: "Ranged skirmisher who fights with a beast at his side." } },
 
   { id: "halden", name: "Hayden", cls: "Cleric", blurb: "Priest of Erastil, road-blesser.",
@@ -205,7 +205,7 @@ const ROSTER = [
   { id: "yarrow", name: "Yarrow", cls: "Druid", blurb: "Green warden of the Sanos deeps.",
     maxHp: 46, skills: { survival: 12, perception: 10, stealth: 6, heal: 8, athletics: 5, diplomacy: 3, disable: 1, knowledge: 10 },
     res: { spells1: 5, spells2: 4, spells3: 2, companion: true }, kit: "Spells to 3rd, a beast at her side, and the weather read like a page.",
-    best: ["forage", "hunt", "tend", "water"], tag: "Reads the wild like scripture; feeds the party and mends the team.",
+    best: ["forage", "hunt", "tend"], tag: "Reads the wild like scripture; feeds the party and mends the team.",
     combat: { hp: 46, ac: 17, touch: 12, atk: 6, init: 3, saves: { fort: 6, ref: 4, will: 8 }, res: { spells1: 5, spells2: 4, spells3: 2 }, moves: ["thornLash", "entangle", "callLightning", "naturesBalm"], role: "Snares the enemy line, then calls the sky down on it." } },
 
   { id: "rook", name: "Rook", cls: "Monk", blurb: "Wanderer of the Windsong cloisters.",
@@ -230,18 +230,17 @@ const BY_ID = Object.fromEntries(ROSTER.map((m) => [m.id, m]));
 
 /* --- Daily roles. Anyone may take any role; class fit reaches better bands. */
 const ROLES = {
-  drive: { label: "Drive the team", desc: "Hold the reins and keep the wagons rolling. A hired teamster can take this off your hands." },
-  scout: { label: "Scout ahead", desc: "Read the road. See trouble before it sees you." },
-  guard: { label: "Stand guard", desc: "Ride watch. Blunt the next ambush and steady a spooked team." },
-  hunt: { label: "Hunt for meat", desc: "Spend arrows to bring down game. Food only." },
-  forage: { label: "Forage fodder", desc: "Graze and gather feed off the land. Animal feed only." },
-  water: { label: "Gather water", desc: "Find springs, clean streams, and snowmelt. Water only." },
-  tend: { label: "Tend the animals", desc: "Rest, water, and doctor the team's condition." },
-  repair: { label: "Mend the wagons", desc: "Shore up frames and axles. Spends repair stock." },
-  medic: { label: "Tend the wounded", desc: "Bind wounds on the march." },
-  quarter: { label: "Ration the stores", desc: "Stretch food, water, and feed; far less is wasted each day." },
+  drive: { label: "Drive the team", desc: "Hold the reins and keep the wagons rolling. Without a driver the caravan crawls and morale frays \u2014 a hired teamster can take this off your hands so all four of your company are free for other work." },
+  scout: { label: "Scout ahead", desc: "Range out front and read the country. A good scout can spot an ambush forming and steer the caravan wide, avoiding the fight entirely." },
+  guard: { label: "Stand guard", desc: "Ride watch over the wagons. Blunts the next ambush and helps steady the team when a predator spooks them." },
+  hunt: { label: "Hunt for meat", desc: "Spend arrows to bring down game \u2014 the party's food. Yields nothing for the animals or the water barrels, so pair it with foraging on long hauls." },
+  forage: { label: "Forage & water", desc: "Work the land as you travel: graze fodder for the team and draw water from springs, streams, and snowmelt. Restocks BOTH animal feed and water \u2014 a little less of each than a dedicated hand would manage, since it's two jobs at once." },
+  tend: { label: "Tend the animals", desc: "Rest, water, and doctor the draft team, restoring their condition so they don't founder on a hard road or in the cold." },
+  repair: { label: "Mend the wagons", desc: "Shore up frames and axles from your repair stock, keeping the wagons from breaking down under the miles." },
+  medic: { label: "Tend the wounded", desc: "Bind wounds on the march \u2014 heals the whole party a little each day without stopping to camp." },
+  quarter: { label: "Ration the stores", desc: "Keep a tight account of the supplies so far less is wasted: stretches food, water, and feed consumption every day." },
 };
-const ROLE_ORDER = ["drive", "scout", "guard", "hunt", "forage", "water", "tend", "repair", "medic", "quarter"];
+const ROLE_ORDER = ["drive", "scout", "guard", "hunt", "forage", "tend", "repair", "medic", "quarter"];
 const SKILL_LABEL = { survival: "Survival", perception: "Perception", stealth: "Stealth", heal: "Heal", athletics: "Athletics", diplomacy: "Diplomacy", disable: "Devices", knowledge: "Lore" };
 
 /* --- Flavor pools: varied road log lines so days and outcomes do not repeat. */
@@ -529,6 +528,10 @@ function rollDrops(st, b, enc) {
   return out;
 }
 function battleItem(id) { if (COMBAT_ITEMS[id]) return { it: COMBAT_ITEMS[id], bag: false }; if (ITEMS[id]) return { it: ITEMS[id], bag: true }; return null; }
+/* A plain weapon strike every class always has. Modest, never runs out — the
+   reliable fallback when spell slots, ki, or rage are spent. Class attack
+   bonuses still apply, so a Fighter's strike lands harder than a Wizard's. */
+const BASIC_STRIKE = { name: "Strike", kind: "attack", target: "enemy", dmg: [1, 8, 2], basic: true, desc: "A basic weapon attack. Always available, costs nothing." };
 
 /* =============================== ENGINE ============================ */
 
@@ -629,7 +632,7 @@ function startJourney(s) {
   const spent = loadoutCost(lo);
   const party = s.picked.map((id) => ({ id, hp: BY_ID[id].maxHp, maxHp: BY_ID[id].maxHp, res: depletables(BY_ID[id].res) }));
   const defaultRoles = {};
-  const rr = lo.hiredDriver ? ["medic", "forage", "guard", "water"] : ["drive", "forage", "guard", "tend"];
+  const rr = lo.hiredDriver ? ["medic", "forage", "guard", "hunt"] : ["drive", "forage", "guard", "tend"];
   s.picked.forEach((id, i) => { defaultRoles[id] = rr[i] || (lo.hiredDriver ? "guard" : "drive"); });
   return {
     phase: "road",
@@ -717,20 +720,16 @@ function applyRoles(st) {
     if (role === "drive") { drivers++; continue; }
     if (role === "guard") { guards++; continue; }
     if (role === "scout") { const c = check(M.skills.perception, 13); if (c.tier !== "critfail") scouted = true; continue; }
-    if (role === "forage") { // FEED only — graze the land for the animals
+    if (role === "forage") { // FEED + WATER, a little less of each than a specialist would manage
       const fz = (ZONES[ROUTE[st.legIndex].zone] || ZONES.varisia).forage;
       const c = check(M.skills.survival, 13);
-      const graze = Math.round(bandGain(c.tier, 18, 13, 5) * fz * (ANIMALS[st.animal].cold >= 1.4 ? 1.4 : 1));
+      const base = bandGain(c.tier, 18, 13, 5);
+      const graze = Math.round(base * fz * (ANIMALS[st.animal].cold >= 1.4 ? 1.4 : 1) * 0.8);
+      const wz = Math.max(0.55, fz); // snowmelt yields water even where fodder is barren
+      const water = Math.round(base * wz * 0.8);
       st.res.feed = clamp(st.res.feed + graze, 0, 999);
-      pushLog(st, fz < 0.3 && graze <= 1 ? `${M.name} finds the frozen ground gives up almost no fodder.` : `${M.name} ${graze >= 10 ? pick(FORAGE_GOOD) : pick(FORAGE_POOR)}: +${graze} feed.`, graze >= 10 ? "good" : graze > 0 ? "info" : "warn");
-      continue;
-    }
-    if (role === "water") { // WATER only — even the ice yields snowmelt, so there is a floor
-      const wz = Math.max(0.55, (ZONES[ROUTE[st.legIndex].zone] || ZONES.varisia).forage);
-      const c = check(Math.max(M.skills.survival, M.skills.perception), 13);
-      const g = Math.round(bandGain(c.tier, 19, 13, 5) * wz);
-      st.res.water = clamp(st.res.water + g, 0, 999);
-      pushLog(st, g > 0 ? `${M.name} draws water for the caravan: +${g} water.` : `${M.name} searches, but finds no clean water.`, g >= 11 ? "good" : g > 0 ? "info" : "warn");
+      st.res.water = clamp(st.res.water + water, 0, 999);
+      pushLog(st, (graze <= 1 && water <= 1) ? `${M.name} finds the frozen ground gives up almost nothing.` : `${M.name} works the land as you go: +${graze} feed, +${water} water.`, graze + water >= 16 ? "good" : graze + water > 0 ? "info" : "warn");
       continue;
     }
     if (role === "hunt") { // FOOD only — spend arrows for meat
@@ -801,9 +800,16 @@ function advanceDay(s, mode = "travel") {
     pushLog(st, `Day ${st.day}: you hold camp. Wounds close, the fallen are brought round, and spent prayers and spells return with the dawn.`, "info");
   }
 
-  /* The road's skill challenges come first; combat fills the days none fires. */
+  /* On the march, the road's skill challenges come first and combat fills the
+     rest. In camp there are no road "events" — you're not covering ground — but
+     in hostile wild country something can still come for you in the dark. */
   if (!arrived && !st.event && !st.battle && st.eventCooldown <= 0) {
-    if (!maybeEvent(st)) maybeCombat(st);
+    if (mode === "travel") {
+      if (!maybeEvent(st)) maybeCombat(st);
+    } else {
+      const node = ROUTE[st.legIndex];
+      if (node && !node.town && node.type !== "city") maybeCombat(st, 0.5, true);
+    }
   }
   checkEnd(st);
   return st;
@@ -845,14 +851,14 @@ function relaxDrift(st) {
 
 /* Roll the day's ambush. Returns true if it resolved to a fight (or a dodged
    one via scouting), so the day's narrative event is skipped. */
-function maybeCombat(st) {
-  const chance = combatChanceFor(st);
+function maybeCombat(st, mult = 1, atCamp = false) {
+  const chance = combatChanceFor(st) * mult;
   if (chance <= 0 || Math.random() > chance) return false;
   if (st.scouted && Math.random() < 0.5) { pushLog(st, "Your scout catches the ambush forming from a rise and steers the caravan wide. No fight today.", "good"); st.eventCooldown = 1; return true; }
   const encKey = weightedPick(regionTable(st));
   st.battle = buildRoadBattle(st, encKey);
   st.eventCooldown = 2;
-  pushLog(st, `Ambush on the road: ${ENCOUNTERS[encKey].name}. Steel comes out.`, "bad");
+  pushLog(st, atCamp ? `Something finds your camp in the dark: ${ENCOUNTERS[encKey].name}. Steel comes out.` : `Ambush on the road: ${ENCOUNTERS[encKey].name}. Steel comes out.`, "bad");
   return true;
 }
 
@@ -1725,7 +1731,8 @@ function buildBossBattle(st, bossKey) {
 function playerAction(b, action) {
   const actor = getC(b, b.awaiting);
   if (!actor || actor.hp <= 0) return b;
-  if (action.kind === "defend") { actor.statuses = [...actor.statuses, { k: "defending", dur: 1, soak: 0.5 }]; logPush(b, `${actor.name} takes a defensive stance.`, "info"); }
+  if (action.kind === "strike") { performMove(b, actor, BASIC_STRIKE, action.target); }
+  else if (action.kind === "defend") { actor.statuses = [...actor.statuses, { k: "defending", dur: 1, soak: 0.5 }]; logPush(b, `${actor.name} takes a defensive stance.`, "info"); }
   else if (action.kind === "flee") {
     const best = Math.max(...living(b, "party").map((p) => p.init));
     const dc = 11 + living(b, "foe").length;
@@ -1755,6 +1762,7 @@ function battleReducer(b, action) {
     case "BT_CHOOSE_ITEM": { const li = battleItem(action.id); if (!li) return b; const it = li.it; if (li.bag ? (b.bag[action.id] || 0) < 1 : (b.supply[it.supply] || 0) < it.cost) return b; if (it.kind === "flee" || ["allEnemies", "allAllies"].includes(it.target)) return playerAction(b, { kind: "item", id: action.id }); return { ...b, ui: { mode: "target", pending: { kind: "item", id: action.id, target: it.target } } }; }
     case "BT_TARGET": return playerAction(b, { kind: b.ui.pending.kind, id: b.ui.pending.id, target: action.uid });
     case "BT_DEFEND": return playerAction(b, { kind: "defend" });
+    case "BT_STRIKE": { const foes = living(b, "foe"); if (foes.length === 1) return playerAction(b, { kind: "strike", target: foes[0].uid }); return { ...b, ui: { mode: "target", pending: { kind: "strike", target: "enemy" } } }; }
     case "BT_FLEE": return playerAction(b, { kind: "flee" });
     default: return b;
   }
