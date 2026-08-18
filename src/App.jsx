@@ -7,7 +7,7 @@ import {
   combatChanceFor, regionTable, resolveBeat, winGame, sellPrice, buyPrice,
   ZONES, ROUTE, ROSTER, BY_ID, EVENTS, BEATS, BRANCHES, GOODS, ANIMALS, WAGONS, ROLES, ROLE_ORDER,
   MOVES, ENEMIES, ENCOUNTERS, REGION_COMBAT, WILD_BY_ZONE, COMBAT_ITEMS, STRAND_DAY,
-  VALUABLES, RELICS, ITEMS, relicFx,
+  VALUABLES, RELICS, ITEMS, relicFx, repFx,
   clamp, roll, startBuyPrice, SANDPOINT, ZONE_COST, DRIVER_FEE, DRIVER_WAGE, INTRO, INTRO_START, PACES, SKILL_LABEL, dfmt,
 } from "./engine.js";
 
@@ -393,7 +393,7 @@ function RoleBoard({ s, dispatch }) {
           <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", opacity: down ? 0.45 : 1, borderBottom: "1px dotted rgba(74,58,36,.2)" }}>
             <div style={{ width: 92 }}>
               <div className="disp" style={{ fontSize: 13 }}>{M.name}</div>
-              <div className="sc" style={{ fontSize: 10, color: SEPIA }}>{down ? "down" : M.cls}</div>
+              <div className="sc" style={{ fontSize: 10, color: p.injury ? WAX : SEPIA }}>{down ? "down" : p.injury ? `hurt: ${p.injury}` : M.cls}</div>
             </div>
             <div style={{ flex: 1 }}>
               <select className="btn" disabled={down} value={s.roles[p.id] || "drive"} onChange={(e) => dispatch({ type: "SET_ROLE", id: p.id, role: e.target.value })}
@@ -422,6 +422,12 @@ function TradePanel({ s, dispatch }) {
       {s.hiredDriver
         ? <button className="btn" onClick={() => dispatch({ type: "DRIVER", hire: false })} style={{ marginBottom: 8, marginLeft: 6 }}>Pay off the teamster</button>
         : <button className="btn" disabled={s.res.gold < DRIVER_FEE} onClick={() => dispatch({ type: "DRIVER", hire: true })} style={{ marginBottom: 8, marginLeft: 6 }}>Hire a teamster ({DRIVER_FEE} gp)</button>}
+      <button className="btn" disabled={s.rumorDone} onClick={() => dispatch({ type: "RUMOR" })} style={{ marginBottom: 8, marginLeft: 6 }} title="Work the market talk (Perception/Diplomacy) to learn what the region ahead pays well for.">{s.rumorDone ? "Asked around ✓" : "Ask around the market"}</button>
+      {s.rumor && s.rumor.goods && s.rumor.goods.length > 0 && (
+        <div className="sc" style={{ fontSize: 11, color: MOSS, marginBottom: 8, padding: "4px 6px", border: "1px dotted rgba(95,106,52,.5)" }}>
+          Rumor — {ZONES[s.rumor.zone].label} pays dear for: {s.rumor.goods.map((g) => GOODS[g].label).join(", ")}.
+        </div>
+      )}
       {(() => {
         const finds = Object.keys(s.valuables || {}).filter((id) => s.valuables[id] > 0);
         if (!finds.length) return null;
@@ -583,7 +589,9 @@ function RoadScreen({ s, dispatch }) {
         const relics = s.relics || [];
         const findsN = Object.values(s.valuables || {}).reduce((t, q) => t + q, 0);
         const itemsN = Object.values(s.items || {}).reduce((t, q) => t + q, 0);
-        if (!relics.length && !findsN && !itemsN) return null;
+        const rep = s.reputation || 0;
+        const repTxt = rep >= 3 ? "renowned for kindness" : rep >= 1 ? "well thought of" : rep <= -3 ? "a name to fear" : rep <= -1 ? "ill-reputed" : null;
+        if (!relics.length && !findsN && !itemsN && !repTxt) return null;
         return (
           <div className="sc" style={{ fontSize: 11, color: SEPIA, marginBottom: 10, marginTop: -4 }}>
             <span style={{ color: WAX }}>Satchel:</span>{" "}
@@ -592,6 +600,7 @@ function RoadScreen({ s, dispatch }) {
             {itemsN > 0 && <span>{Object.keys(s.items).filter((k) => s.items[k] > 0).map((k) => `${s.items[k]}× ${ITEMS[k].name}`).join(", ")}</span>}
             {itemsN > 0 && findsN ? " · " : ""}
             {findsN > 0 && <span>{findsN} find{findsN === 1 ? "" : "s"} to sell</span>}
+            {repTxt && <span style={{ color: rep >= 1 ? MOSS : WAX }}>{(relics.length || findsN || itemsN) ? " · " : ""}The caravan is {repTxt}.</span>}
           </div>
         );
       })()}
@@ -619,7 +628,7 @@ function RoadScreen({ s, dispatch }) {
             <Section title="Company">
               {s.party.map((p) => { const M = BY_ID[p.id]; return (
                 <div key={p.id} style={{ marginBottom: 6 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 13 }}>{M.name} <span className="sc" style={{ fontSize: 10, color: SEPIA }}>{M.cls}</span></span><span className="disp" style={{ fontSize: 12, color: p.hp <= 0 ? WAX : INK }}>{p.hp}/{p.maxHp}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 13 }}>{M.name} <span className="sc" style={{ fontSize: 10, color: p.injury ? WAX : SEPIA }}>{p.injury ? p.injury : M.cls}</span></span><span className="disp" style={{ fontSize: 12, color: p.hp <= 0 ? WAX : INK }}>{p.hp}/{p.maxHp}</span></div>
                   <Bar v={p.hp} max={p.maxHp} tint={WAX} low={0} />
                 </div>
               ); })}

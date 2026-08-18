@@ -428,8 +428,8 @@ function combatChanceFor(st) {
   if (!node || node.town || node.type === "city") return 0;
   const danger = st.legDanger[st.legIndex] || 1;
   const z = ZONES[node.zone] || ZONES.varisia;
-  const zoneRisk = z.cold >= 1 ? 0.05 : z.cold > 0 ? 0.03 : 0;
-  return clamp(0.10 + danger * 0.04 + zoneRisk + seasonStage(st.day).sev * 0.05, 0, 0.42);
+  const zoneRisk = z.cold >= 1 ? 0.08 : z.cold > 0 ? 0.05 : 0.02;
+  return clamp((0.15 + danger * 0.05 + zoneRisk + seasonStage(st.day).sev * 0.06) * repFx(st).combatMul, 0, 0.52);
 }
 function regionTable(st) { const node = ROUTE[st.legIndex]; return REGION_COMBAT[node.name] || WILD_BY_ZONE[node.zone] || WILD_BY_ZONE.varisia; }
 
@@ -511,6 +511,82 @@ function relicFx(st) {
   return fx;
 }
 const listJoin = (a) => (a.length <= 1 ? a[0] || "" : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]);
+
+/* =========================== CONSEQUENCES ======================== */
+/* Choices should leave marks that last, not one-line blips. Three systems:
+   - INJURIES: a brutal outcome maims a traveler — their max HP drops and stays
+     down until they can rest under a roof in a town. Named, visible, felt.
+   - REPUTATION: kind or cruel choices shift how the road treats you — folk
+     help a good name (better prices, steadier morale); a cruel one draws grudges.
+   - RUMORS: what you learn at a town's market about the region ahead. */
+
+const INJURIES = [
+  { name: "cracked ribs", pct: 0.25 }, { name: "a wrenched knee", pct: 0.2 },
+  { name: "a deep gash", pct: 0.25 }, { name: "frostbitten hands", pct: 0.2 },
+  { name: "a concussion", pct: 0.3 }, { name: "a broken arm", pct: 0.28 },
+];
+/* Maim a random able traveler. Their max HP falls (and current HP with it) until
+   a town rest sets the bone. Returns the log line, or null if no one to hurt. */
+function injureOne(st, cause) {
+  const able = st.party.filter((p) => p.hp > 0 && !p.injury);
+  if (!able.length) return null;
+  const p = able[(Math.random() * able.length) | 0];
+  const inj = INJURIES[(Math.random() * INJURIES.length) | 0];
+  p.injury = inj.name;
+  p.maxHp = Math.max(1, Math.round((p.maxHpBase || p.maxHp) * (1 - inj.pct)));
+  p.hp = Math.min(p.hp, p.maxHp);
+  const line = `${BY_ID[p.id].name} takes ${inj.name}${cause ? " " + cause : ""} — a wound that will slow them until they can rest in a town.`;
+  pushLog(st, line, "bad");
+  return line;
+}
+/* Set a bone: clear one injury and restore that traveler's full frame. */
+function mendInjuries(st) {
+  let mended = 0;
+  st.party = st.party.map((p) => { if (p.injury) { mended++; return { ...p, injury: null, maxHp: p.maxHpBase || p.maxHp }; } return p; });
+  return mended;
+}
+
+/* Reputation runs from cruel (−) to kind (+). It bends town prices and the
+   caravan's baseline morale, and colors how strangers meet you. */
+function repShift(st, d) { st.reputation = clamp((st.reputation || 0) + d, -5, 5); }
+function repFx(st) {
+  const r = st.reputation || 0;
+  return {
+    sellMul: 1 + r * 0.04,                 // renown moves prices ±4%/pt, up to ±20%
+    moraleFloor: r >= 3 ? 35 : r >= 2 ? 25 : 0,
+    kind: r >= 2, cruel: r <= -2,
+    combatMul: r <= -3 ? 1.25 : r <= -2 ? 1.12 : r >= 3 ? 0.9 : 1, // a feared name draws trouble; a loved one is shielded
+  };
+}
+/* Has this choice's mark been earned? Used for later payoffs. */
+function hasMark(st, m) { return !!(st.marks && st.marks[m]); }
+function useMark(st, m) { if (st.marks && st.marks[m]) { const n = { ...st.marks }; delete n[m]; st.marks = n; return true; } return false; }
+
+/* A market rumor: which goods the region AHEAD is hungry for, learned on a good
+   Perception/Diplomacy check while in town. */
+function nextRegionZone(st) {
+  const here = ROUTE[st.legIndex].zone;
+  for (let i = st.legIndex + 1; i < ROUTE.length; i++) if (ROUTE[i].zone !== here) return ROUTE[i].zone;
+  return here;
+}
+function marketRumor(s) {
+  const node = ROUTE[s.legIndex]; if (!node.town) return s;
+  if (s.rumorDone) return s; // one ask per town visit
+  const st = { ...s, log: [...s.log], party: s.party.map((p) => ({ ...p })) };
+  st.rumorDone = true;
+  const best = st.party.filter((p) => p.hp > 0).reduce((a, p) => { const v = Math.max(BY_ID[p.id].skills.diplomacy, BY_ID[p.id].skills.perception); return v > a.v ? { id: p.id, v } : a; }, { id: st.party[0].id, v: 0 });
+  const c = check(best.v, 14);
+  const good = c.tier === "success" || c.tier === "critsuccess";
+  const zone = nextRegionZone(st);
+  if (good) {
+    const wanted = Object.keys(GOODS).map((g) => { let bestIdx = 0; for (const n of ROUTE) if (n.zone === zone && n.market && n.market[g]) bestIdx = Math.max(bestIdx, n.market[g]); return [g, bestIdx]; }).filter(([, i]) => i >= 1.2).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([g]) => g);
+    st.rumor = { zone, goods: wanted };
+    pushLog(st, wanted.length ? `${BY_ID[best.id].name} works the market talk: in ${ZONES[zone].label}, they pay dear for ${listJoin(wanted.map((g) => GOODS[g].label))}. Worth loading up.` : `${BY_ID[best.id].name} asks around, but the traders are tight-lipped about the road ahead.`, wanted.length ? "good" : "info");
+  } else {
+    pushLog(st, `${BY_ID[best.id].name} asks after prices ahead, but gets only shrugs and tall tales. No telling what sells where.`, "warn");
+  }
+  return st;
+}
 
 /* Roll what the fight leaves behind. Mutates st (valuables/relics/items). */
 function rollDrops(st, b, enc) {
@@ -630,7 +706,7 @@ function initSetup() {
 function startJourney(s) {
   const lo = s.loadout;
   const spent = loadoutCost(lo);
-  const party = s.picked.map((id) => ({ id, hp: BY_ID[id].maxHp, maxHp: BY_ID[id].maxHp, res: depletables(BY_ID[id].res) }));
+  const party = s.picked.map((id) => ({ id, hp: BY_ID[id].maxHp, maxHp: BY_ID[id].maxHp, maxHpBase: BY_ID[id].maxHp, injury: null, res: depletables(BY_ID[id].res) }));
   const defaultRoles = {};
   const rr = lo.hiredDriver ? ["medic", "forage", "guard", "hunt"] : ["drive", "forage", "guard", "tend"];
   s.picked.forEach((id, i) => { defaultRoles[id] = rr[i] || (lo.hiredDriver ? "guard" : "drive"); });
@@ -662,6 +738,7 @@ function startJourney(s) {
     earned: 0,
     flags: { brinewall: null, highice: null, kasai: null, suishen: false }, stormSeen: false,
     valuables: {}, relics: [], items: {},
+    reputation: 0, marks: {}, rumor: null, rumorDone: false,
     drift: {},
     log: [{ t: `You roll out of Sandpoint with ${teamSize(lo.wagons)} ${ANIMALS[lo.animal].label.toLowerCase()}, ${lo.wagons} wagon${lo.wagons > 1 ? "s" : ""}, and Ameiko Kaijitsu's fate riding with you. Minkai lies fourteen hundred miles east, across the roof of the world. See her home.`, k: "start", day: 1 }],
     pending: null, ferry: null, event: null, beat: null, battle: null, lastCheck: null,
@@ -811,6 +888,8 @@ function advanceDay(s, mode = "travel") {
       if (node && !node.town && node.type !== "city") maybeCombat(st, 0.5, true);
     }
   }
+  const mf = repFx(st).moraleFloor;
+  if (mf && st.morale < mf) st.morale = mf;
   checkEnd(st);
   return st;
 }
@@ -1014,6 +1093,7 @@ const EVENTS = {
       { id: "sell", label: "Sell him a wagonload of goods", outcomes: { good: { text: "You clear some cargo at a decent roadside price. Coin in hand beats coin in the east.", days: 0, roadSell: 1.15 } } },
       { id: "haggle", label: "Haggle hard (Bard/Rogue: Diplomacy)", gate: ["lem", "vex"], skill: "diplomacy", dc: 15, outcomes: { good: { text: "You talk him up to a town-and-a-half price. He shakes his head, grinning, and pays.", days: 0, roadSell: 1.45 }, fail: { text: "He will not be moved far. Still, a fair price for the road.", days: 0, roadSell: 1.15 }, bad: { text: "You push too hard; he shrugs and rolls on. Nothing sold.", days: 0 } } },
       { id: "buysupply", label: "Buy provisions off him (40 gold)", need: { gold: 40 }, outcomes: { good: { text: "Food, water, feed, and a little medicine, all off the back of his cart.", days: 0, cost: { gold: 40 }, gain: { food: 16, water: 16, feed: 14, medicine: 2 } } } },
+      { id: "rob", label: "Take his cart and leave him the road", gate: ["Barbarian", "Fighter", "Rogue"], skill: "athletics", dc: 12, outcomes: { good: { text: "He backs off his own cart, hands raised, and you help yourselves. He'll live — and he'll talk. Word of a caravan that robs honest traders will run ahead of you now.", days: 0, gain: { food: 20, water: 12, feed: 12, medicine: 3, gold: 25 }, rep: -2 } } },
       { id: "wave", label: "Wave him on", outcomes: { good: { text: "You nod and pass. The road is long and you have miles to make.", days: 0 } } },
     ],
   },
@@ -1062,7 +1142,7 @@ const EVENTS = {
       Monk: "Rook could walk the load across light-footed, one beast at a time.",
     },
     options: [
-      { id: "read", label: "Find the sound span (Ranger/Druid: Survival)", gate: ["Ranger", "Druid"], skill: "survival", dc: 16, outcomes: { good: { text: "Flagged and crossed, wheel by careful wheel. Not a strap lost.", days: 0 }, fail: { text: "A wagon's rear wheel breaks through; you haul it back from the lip.", days: 1, hurtWagon: 10 }, bad: { text: "The bridge gives as the last wagon crosses. You save the team, but not everything on it.", days: 1, hurtWagon: 18, breakFragile: true } } },
+      { id: "read", label: "Find the sound span (Ranger/Druid: Survival)", gate: ["Ranger", "Druid"], skill: "survival", dc: 16, outcomes: { good: { text: "Flagged and crossed, wheel by careful wheel. Not a strap lost.", days: 0 }, fail: { text: "A wagon's rear wheel breaks through; you haul it back from the lip.", days: 1, hurtWagon: 10 }, bad: { text: "The bridge gives as the last wagon crosses. You save the team, but someone goes down with the load.", days: 1, hurtWagon: 18, breakFragile: true, injure: 0.7, injureCause: "in the fall" } } },
       { id: "probe", label: "Probe every foot (slow, safe)", outcomes: { good: { text: "You spend half a day sounding the ice and lead the caravan over cold but whole.", days: 1, morale: -1 } } },
       { id: "rush", label: "Gun it across before it can give", outcomes: { good: { text: "You whip the team and thunder over. The bridge collapses behind the last wheel. Nerves, but no losses.", days: 0, riskAnimal: true, hurtCond: 12 } } },
     ],
@@ -1108,7 +1188,7 @@ const EVENTS = {
       Fighter: "Dram forms the guards up between the predator and the team.",
     },
     options: [
-      { id: "settle", label: "Settle the team (Ranger/Druid: Survival)", gate: ["Ranger", "Druid"], skill: "survival", dc: 14, outcomes: { good: { text: "A steady hand and a low voice; the animals blow and stamp, then quiet. The shadow slinks off, and nothing is lost.", days: 0, morale: 2 }, fail: { text: "You hold most of them, but one mule tears loose and bolts before you catch it. Cost you condition wrestling it back.", days: 0, hurtCond: 12 }, bad: { text: "The team panics as one. A tangle of harness, a cracked shaft, and a beast run half to death before you calm it.", days: 0, hurtCond: 20, hurtWagon: 8, riskAnimal: true } } },
+      { id: "settle", label: "Settle the team (Ranger/Druid: Survival)", gate: ["Ranger", "Druid"], skill: "survival", dc: 14, outcomes: { good: { text: "A steady hand and a low voice; the animals blow and stamp, then quiet. The shadow slinks off, and nothing is lost.", days: 0, morale: 2 }, fail: { text: "You hold most of them, but one mule tears loose and bolts before you catch it. Cost you condition wrestling it back.", days: 0, hurtCond: 12 }, bad: { text: "The team panics as one. A tangle of harness, a cracked shaft, and someone dragged under the hooves before you calm it.", days: 0, hurtCond: 20, hurtWagon: 8, riskAnimal: true, injure: 0.6, injureCause: "under the panicked team" } } },
       { id: "front", label: "Guards to the front, drive it off", gate: ["Fighter", "Barbarian", "Paladin"], skill: "athletics", dc: 13, outcomes: { good: { text: "Torches up, steel bared, a wall of shouting between the team and the dark. The predator decides you are more trouble than a meal.", days: 0, morale: 1 }, fail: { text: "It circles a while longer, keeping everyone on edge and sleepless. Morale sags.", days: 0, morale: -3 } } },
       { id: "ride", label: "Break camp and move — now", outcomes: { good: { text: "You hitch up in the dark and roll out fast, hearts pounding. Whatever it was, it doesn't follow. Nobody sleeps much.", days: 0, morale: -2 } } },
     ],
@@ -1168,7 +1248,7 @@ const EVENTS = {
       Ranger: "Kass can read where the drift is thinnest and shortest to breach.",
     },
     options: [
-      { id: "dig", label: "Break trail through (Athletics)", gate: ["Barbarian", "Fighter", "Monk"], skill: "athletics", dc: 15, outcomes: { good: { text: "Shift by frozen shift, you cut a channel wide enough and lead the team through. Bitter, exhausting, done.", days: 1, hurtParty: 4, morale: -2 }, fail: { text: "The digging goes long and the cold gets its teeth in before you break through.", days: 1, hurtParty: 9, morale: -3 } } },
+      { id: "dig", label: "Break trail through (Athletics)", gate: ["Barbarian", "Fighter", "Monk"], skill: "athletics", dc: 15, outcomes: { good: { text: "Shift by frozen shift, you cut a channel wide enough and lead the team through. Bitter, exhausting, done.", days: 1, hurtParty: 4, morale: -2 }, fail: { text: "The digging goes long and the cold gets its teeth in before you break through.", days: 1, hurtParty: 9, morale: -3, injure: 0.4, injureCause: "to the cold" } } },
       { id: "thin", label: "Find the thinnest breach (Ranger: Survival)", gate: ["Ranger", "Druid"], skill: "survival", dc: 15, outcomes: { good: { text: "Kass reads the drift and picks the one place it's barely waist-deep. You're through by midday with breath to spare.", days: 0, morale: 1 }, fail: { text: "The 'thin' place isn't. You dig anyway, and lose the day to it.", days: 1, hurtParty: 5 } } },
       { id: "waitdrift", label: "Wait for the wind to scour it", outcomes: { good: { text: "You hunker down two days while the wind strips the pass back to rock. Safe, but the cold and the delay cost you dearly.", days: 2, morale: -3 } } },
     ],
@@ -1193,7 +1273,7 @@ const EVENTS = {
     where: (n) => n.type === "wild" && (ZONES[n.zone].cold || 0) < 1,
     body: "A ragged band of pilgrims shares the road a while, bound for some shrine over the next range. They are footsore and glad of company, and full of small talk about weather and saints and the price of bread.",
     options: [
-      { id: "share", label: "Share the road and swap stories", outcomes: { good: { text: "You walk together an afternoon, trading road tales and bad jokes. The company rolls on lighter of heart than it has in days.", days: 0, morale: 3 } } },
+      { id: "share", label: "Share the road and swap stories", outcomes: { good: { text: "You walk together an afternoon, trading road tales and bad jokes. The company rolls on lighter of heart, and the pilgrims speak well of you down the road.", days: 0, morale: 3, rep: 1 } } },
       { id: "news", label: "Ask what lies on the road ahead", outcomes: { good: { text: "They tell you what they've seen — a ferry running high, a village with good grain, a stretch best passed by daylight. Useful, and kindly meant.", days: 0, morale: 1 } } },
       { id: "wavepilg", label: "Nod and keep your own pace", outcomes: { good: { text: "You tip your hat and press on. They wave you off with a blessing you don't ask for and don't refuse.", days: 0 } } },
     ],
@@ -1224,7 +1304,7 @@ const EVENTS = {
     body: "A thread of woodsmoke leads to a hermit tending a small fire by a lean-to, miles from anywhere. He watches you approach without surprise, as though he's been expecting exactly this caravan on exactly this day.",
     options: [
       { id: "hear", label: "Sit a while and hear him out", outcomes: { good: { text: "He speaks in riddles about roads and returns and the weight of what you carry. Little of it makes sense, but there's a strange comfort in it, and the company leaves oddly steadied.", days: 0, morale: 2 } } },
-      { id: "gift", label: "Share some food with him", cost: { food: 3 }, outcomes: { good: { text: "You leave him a little food. He presses a smooth river-stone into your hand in return, 'for luck at the water,' and says nothing more. Foolish, maybe. But it feels right.", days: 0, morale: 3 } } },
+      { id: "gift", label: "Share some food with him", cost: { food: 3 }, outcomes: { good: { text: "You leave him a little food. He presses a smooth river-stone into your hand 'for luck at the water,' and says nothing more. It feels right.", days: 0, morale: 3, rep: 1, mark: "lucky_stone" } } },
       { id: "leaveherm", label: "Leave him to his solitude", outcomes: { good: { text: "You raise a hand and pass on. He returns to his fire without a word, and is gone behind the trees before the last wagon clears the bend.", days: 0 } } },
     ],
   },
@@ -1243,9 +1323,9 @@ const EVENTS = {
     where: (n) => n.type === "wild" && (ZONES[n.zone].cold || 0) < 1,
     body: "You pass close to a hamlet's edge, and a knot of village children spills out to run alongside the wagons, shrieking with delight, begging to see the strange goods and stranger faces from far away.",
     options: [
-      { id: "ride", label: "Let a few ride the tailboard a mile", outcomes: { good: { text: "You swing a couple up onto the tailboard for a mile of giddy adventure, then set them down to run home breathless with the tale. Hard to stay grim after that.", days: 0, morale: 3 } } },
+      { id: "ride", label: "Let a few ride the tailboard a mile", outcomes: { good: { text: "You swing a couple up onto the tailboard for a mile of giddy adventure, then set them down to run home breathless with the tale. Word of the kind caravan runs ahead of you.", days: 0, morale: 3, rep: 1 } } },
       { id: "coin", label: "Toss them a coin and a wave", cost: { gold: 2 }, outcomes: { good: { text: "A scatter of copper and a scramble of laughter, and the caravan rolls on trailing cheers. Cheap, at the price.", days: 0, morale: 2 } } },
-      { id: "shoo", label: "Shoo them off — no time", outcomes: { good: { text: "You wave them back from the wheels and press on. Their cheering curdles to a few rude gestures, and the mood in the wagons dips a notch.", days: 0, morale: -1 } } },
+      { id: "shoo", label: "Shoo them off — no time", outcomes: { good: { text: "You wave them back from the wheels and press on. Their cheering curdles to jeers, and word of the cold-hearted caravan runs ahead of you.", days: 0, morale: -1, rep: -1 } } },
     ],
   },
   cairns: {
@@ -1257,11 +1337,34 @@ const EVENTS = {
       { id: "onward", label: "Press on past in silence", outcomes: { good: { text: "You do not stop. You have every intention of not joining them. The wagons roll by, and the white closes over the cairns behind you.", days: 0 } } },
     ],
   },
+
+  /* ---- Reputation callbacks: the road remembers how you've treated it ---- */
+  reckoning_kind: {
+    title: "A Kindness Returned",
+    where: (n) => n.type === "wild",
+    onlyIf: (st) => repFx(st).kind,
+    body: "A rider overtakes the caravan at a gallop, then reins in with open hands. You've been named to him — the caravan that shares its fire and helps folk on the road. He has news, and he means you well.",
+    options: [
+      { id: "hear_warn", label: "Hear his warning", outcomes: { good: { text: "Reavers are working the country just ahead, he says, and he tells you exactly where. Forewarned, you slip past the trap they'd laid. Your good name just saved lives.", days: 0, morale: 3, gain: { ammo: 4 } } } },
+      { id: "trade_kind", label: "Share a meal and trade news", cost: { food: 2 }, outcomes: { good: { text: "You break bread with him. He leaves you better provisioned than he found you and carries your name further still — the kind caravan, worth helping.", days: 0, morale: 3, rep: 1, gain: { medicine: 2 } } } },
+    ],
+  },
+  reckoning_cruel: {
+    title: "A Debt Come Due",
+    where: (n) => n.type === "wild",
+    onlyIf: (st) => repFx(st).cruel,
+    body: "Armed men step out of the rocks ahead and behind, unhurried. Word of your caravan has run before you too — but not the kind word. These are folk you've wronged, or friends of them, and they've been waiting.",
+    options: [
+      { id: "pay_off", label: "Buy your way clear", cost: { gold: 120 }, outcomes: { good: { text: "You empty a heavy purse into a waiting hand. They melt back into the rocks, grinning. Coin spent to answer for the name you've made.", days: 0, morale: -2 } } },
+      { id: "face_them", label: "Draw steel and answer for it", battle: "banditToll" },
+      { id: "make_amends", label: "Own it, and try to make it right", gate: ["Bard", "Cleric", "Paladin"], skill: "diplomacy", dc: 16, outcomes: { good: { text: "You step down unarmed and speak plainly — no excuses. It's a near thing, but something in it lands. They let you pass, and a little of the poison drains from your name.", days: 0, morale: 2, rep: 2 }, fail: { text: "Fine words, but they've heard fine words from you before. They take a wagon's worth of goods as payment and go.", days: 0, roadSell: 0, dumpCargo: true, morale: -4 } } },
+    ],
+  },
 };
 
 function eligibleEvents(st) {
   const node = ROUTE[st.legIndex];
-  return Object.entries(EVENTS).filter(([k, e]) => e.where(node) && k !== st.recentEvent);
+  return Object.entries(EVENTS).filter(([k, e]) => e.where(node) && k !== st.recentEvent && (!e.onlyIf || e.onlyIf(st)));
 }
 function maybeEvent(st) {
   const stg = seasonStage(st.day);
@@ -1343,6 +1446,9 @@ function applyOutcome(st, r, ev) {
   if (r.breakFragile && st.cargo.glass > 0) { const broke = Math.ceil(st.cargo.glass * 0.5); st.cargo.glass -= broke; pushLog(st, `${broke} crates of glassware shatter in the crossing.`, "bad"); }
   if (r.dumpCargo) { const total = Object.values(st.cargo).reduce((a, b) => a + b, 0); if (total > 0) { for (const g of Object.keys(st.cargo)) st.cargo[g] = Math.floor(st.cargo[g] * 0.4); pushLog(st, "Crates go into the mire. Painful, but you are moving.", "warn"); } }
   if (r.roadSell) { let got = 0; for (const [g, q] of Object.entries(st.cargo)) if (q > 0) { got += Math.round(q * GOODS[g].base * r.roadSell); st.cargo[g] = 0; } if (got > 0) { st.res.gold += got; st.earned += got; pushLog(st, `You sell your load on the road for ${got} gp.`, "good"); } else pushLog(st, "You have nothing to sell.", "info"); }
+  if (r.injure && Math.random() < (typeof r.injure === "number" ? r.injure : 1)) injureOne(st, r.injureCause);
+  if (r.rep) repShift(st, r.rep);
+  if (r.mark) { st.marks = { ...(st.marks || {}), [r.mark]: true }; }
 }
 
 /* =============================== STORY BEATS ====================== */
@@ -1440,8 +1546,8 @@ function resolveBeat(s, optId) {
      merely finish off whatever the road left. */
   restorePools(st);
   st.party = st.party.map((p) => p.hp > 0
-    ? { ...p, hp: clamp(p.hp + Math.ceil((p.maxHp - p.hp) * 0.8) + 4, 0, p.maxHp) }
-    : { ...p, hp: Math.round(p.maxHp * 0.55) });
+    ? { ...p, hp: clamp(p.hp + Math.ceil((p.maxHp - p.hp) * 0.6) + 3, 0, p.maxHp) }
+    : { ...p, hp: Math.round(p.maxHp * 0.4) });
   st.battle = buildBossBattle(st, beat.boss);
   return st;
 }
@@ -1475,7 +1581,13 @@ function crossFerry(s, mode) {
   const what = ice ? `the ice of ${st.ferry.name}` : `the ${st.ferry.name}`;
   if (chk.tier === "critsuccess" || chk.tier === "success") pushLog(st, `${chk.who} reads ${what} and brings the caravan across clean. No coin, no loss.`, "good");
   else if (chk.tier === "fail") { st.wagon = clamp(st.wagon - 10, 0, 100); damageAll(st, roll(1, 4), ice ? "The crossing batters and freezes the party" : "The ford soaks and batters the party"); if (st.cargo.glass > 0) st.cargo.glass = Math.ceil(st.cargo.glass * 0.7); pushLog(st, "A hard crossing; the wagon strains and everyone suffers for it.", "warn"); }
-  else { st.wagon = clamp(st.wagon - 20, 0, 100); if (Math.random() < 0.4) st.animals = Math.max(0, st.animals - 1); damageAll(st, roll(1, 6), ice ? "A crevasse nearly swallows a wagon" : "The current nearly takes a wagon"); pushLog(st, `${st.ferry.name} very nearly ends the journey.`, "bad"); }
+  else { // a critical failure at the water
+    if (useMark(st, "lucky_stone")) {
+      pushLog(st, `${st.ferry.name} nearly ends the journey — but the hermit's river-stone seems to turn cold in your hand, and at the last moment the caravan finds its footing. 'Luck at the water,' he said. Spent now.`, "good");
+      st.wagon = clamp(st.wagon - 6, 0, 100); st.lastCheck = chk; st.ferry = null; checkEnd(st); return st;
+    }
+    st.wagon = clamp(st.wagon - 20, 0, 100); if (Math.random() < 0.4) st.animals = Math.max(0, st.animals - 1); damageAll(st, roll(1, 6), ice ? "A crevasse nearly swallows a wagon" : "The current nearly takes a wagon"); pushLog(st, `${st.ferry.name} very nearly ends the journey.`, "bad");
+  }
   st.lastCheck = chk; st.ferry = null; checkEnd(st); return st;
 }
 function resupply(s) {
@@ -1488,13 +1600,15 @@ function resupply(s) {
   for (const [k, target, base] of goods) { const price = Math.max(1, Math.round(base * mul)); const want = Math.max(0, target - st.res[k]); const spendable = Math.max(0, st.res.gold - reserve); const can = Math.floor(spendable / price); const n = Math.min(want, can); if (n > 0) { st.res[k] += n; st.res.gold -= n * price; spent += n * price; got[k] = n; } }
   st.morale = clamp(st.morale + 3, 0, 100);
   // A stay in town is real rest: the fallen are nursed back onto their feet,
-  // wounds mend, and every daily ability refreshes.
+  // wounds mend, injuries are properly set, and every daily ability refreshes.
+  const mended = mendInjuries(st);
   st.party = st.party.map((p) => p.hp > 0
     ? { ...p, hp: clamp(p.hp + Math.ceil((p.maxHp - p.hp) * 0.7) + 4, 0, p.maxHp) }
     : { ...p, hp: Math.round(p.maxHp * 0.6) });
   restorePools(st);
+  st.rumorDone = false; // you can ask around again on a fresh visit
   const parts = ["food", "water", "feed", "medicine", "ammo", "repair"].filter((k) => got[k]).map((k) => `+${got[k]} ${k}`).join(", ") || "found little worth buying";
-  pushLog(st, `You rest and resupply at ${node.name}${mul >= 2 ? " (northern prices, and steep)" : ""}: ${parts} for ${spent} gp. The company sleeps under a roof and wakes mended. Purse: ${st.res.gold} gp.`, "arrive");
+  pushLog(st, `You rest and resupply at ${node.name}${mul >= 2 ? " (northern prices, and steep)" : ""}: ${parts} for ${spent} gp. The company sleeps under a roof and wakes mended${mended ? "; broken bones are set and bound" : ""}. Purse: ${st.res.gold} gp.`, "arrive");
   return st;
 }
 function sellCargo(s, good, qty) {
@@ -1503,7 +1617,7 @@ function sellCargo(s, good, qty) {
   const st = { ...s, res: { ...s.res }, cargo: { ...s.cargo }, drift: cloneDrift(s.drift), log: [...s.log] };
   let take = 0;
   for (let i = 0; i < n; i++) { take += sellPrice(st, node, good); driftSet(st, node.name, good, driftGet(st, node.name, good) - 0.04); }
-  take = Math.round(take * relicFx(st).sellMul);
+  take = Math.round(take * relicFx(st).sellMul * repFx(st).sellMul);
   st.res.gold += take; st.earned += take; st.cargo[good] -= n;
   pushLog(st, `Sold ${n} ${GOODS[good].label} at ${node.name} for ${take} gp${n > 1 ? ` (${Math.round(take / n)} gp each; the price sags as you flood the stalls)` : ""}.`, "good");
   return st;
@@ -1849,6 +1963,7 @@ function reducer(state, action) {
     case "RESUPPLY": return resupply(state);
     case "SELL": return sellCargo(state, action.good, action.qty);
     case "SELL_FINDS": return sellValuables(state);
+    case "RUMOR": return marketRumor(state);
     case "BUY": return buyGoods(state, action.good, action.qty);
     case "BEAT": return resolveBeat(state, action.opt);
     case "RESTART": return initSetup();
@@ -1929,4 +2044,5 @@ export {
   clamp, roll, startBuyPrice, SANDPOINT, ZONE_COST, DRIVER_FEE, DRIVER_WAGE,
   INTRO, INTRO_START, PACES, SKILL_LABEL, dfmt,
   VALUABLES, RELICS, ITEMS, relicFx, sellValuables,
+  marketRumor, repFx, INJURIES,
 };
