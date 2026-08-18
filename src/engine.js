@@ -1,5 +1,5 @@
 /* =====================================================================
-   The Long Road — GAME ENGINE (pure JavaScript, no React).
+   The Long Road, GAME ENGINE (pure JavaScript, no React).
    Extracted from the original single-file build so any front-end
    (Discord Activity, bot, plain web) can import the same brain.
    ===================================================================== */
@@ -321,7 +321,7 @@ const MOVES = {
   deadeye: { name: "Deadeye Shot", kind: "attack", target: "enemy", atkBonus: 3, dmg: [2, 8, 6], desc: "A killing arrow, placed with terrible precision." },
   healingWord: { name: "Healing Word", kind: "heal", target: "ally", heal: [3, 8, 8], cost: { spells2: 1 }, desc: "A greater mending that closes even grave wounds." },
   flamestrike: { name: "Flame Strike", kind: "save", target: "allEnemies", dmg: [4, 6, 0], save: "ref", dc: 15, half: true, cost: { spells2: 1 }, desc: "A column of holy fire across the enemy line. Reflex halves." },
-  viciousStrike: { name: "Vicious Strike", kind: "attack", target: "enemy", dmg: [1, 6, 4], sneak: [4, 6, 2], desc: "A murderous blow — ruinous against an off-guard foe." },
+  viciousStrike: { name: "Vicious Strike", kind: "attack", target: "enemy", dmg: [1, 6, 4], sneak: [4, 6, 2], desc: "A murderous blow, ruinous against an off-guard foe." },
   bleedingStrike: { name: "Hamstring", kind: "attack", target: "enemy", dmg: [2, 6, 3], rider: { k: "bleeding", dur: 3, dot: 4 }, desc: "A deep cut that bleeds the foe through the whole fight." },
   forceLance: { name: "Force Lance", kind: "auto", target: "enemy", dmg: [4, 4, 4], cost: { spells2: 1 }, desc: "A honed spear of pure force. Never misses, and it hurts." },
   greaterFireball: { name: "Greater Fireball", kind: "save", target: "allEnemies", dmg: [7, 6, 0], save: "ref", dc: 17, half: true, cost: { spells3: 1 }, desc: "A roaring blast that engulfs every foe. Reflex halves." },
@@ -337,7 +337,7 @@ const MOVES = {
   quiveringPalm: { name: "Quivering Palm", kind: "attack", target: "enemy", dmg: [3, 6, 4], rider: { k: "stunned", dur: 2, skip: true, chance: 0.5 }, cost: { ki: 1 }, desc: "A killing touch that can stop a foe cold." },
   greaterLay: { name: "Greater Lay on Hands", kind: "heal", target: "ally", heal: [3, 6, 7], cost: { layOnHands: 1 }, desc: "A greater healing touch; wounds knit under her palm." },
   radiantSmite: { name: "Radiant Smite", kind: "attack", target: "enemy", atkBonus: 3, dmg: [2, 10, 10], cost: { smite: 1 }, desc: "A vow blazing into steel; a devastating, sure blow." },
-  empoweredBolt: { name: "Empowered Bolt", kind: "touch", target: "enemy", dmg: [3, 6, 3], desc: "The bloodline burns hotter now — a heavier lash of flame, always ready." },
+  empoweredBolt: { name: "Empowered Bolt", kind: "touch", target: "enemy", dmg: [3, 6, 3], desc: "The bloodline burns hotter now, a heavier lash of flame, always ready." },
   infernoBlast: { name: "Inferno Blast", kind: "save", target: "allEnemies", dmg: [7, 6, 0], save: "ref", dc: 17, half: true, cost: { spells3: 1 }, desc: "The blood ignites; fire consumes every foe. Reflex halves." },
   // -- foes --
   foeSlash: { name: "Slash", kind: "attack", target: "enemy", dmg: [1, 8, 4] },
@@ -372,7 +372,7 @@ const MOVES = {
  * The company shares experience from the fights it wins and grows more
  * seasoned over the long road: level 5 at the outset, up to level 7 by the
  * end of a hard journey. Each level unlocks one advanced move per class that
- * REPLACES that class's weakest one — options change, not just numbers — plus
+ * REPLACES that class's weakest one, options change, not just numbers, plus
  * a small bump in staying power. */
 const MAX_LEVEL = 7;
 const XP_THRESH = { 6: 800, 7: 2300 }; // cumulative party XP needed for each level
@@ -407,7 +407,7 @@ function grantXP(st, amount) {
     lvl += 1;
     st.party = st.party.map((p) => ({ ...p, maxHpBase: (p.maxHpBase || p.maxHp) + 4, maxHp: p.maxHp + 4, hp: p.hp > 0 ? p.hp + 4 : p.hp }));
     const learned = st.party.map((p) => { const step = (MOVE_PROGRESSION[BY_ID[p.id].cls] || []).find((s) => s.lvl === lvl); return step ? `${BY_ID[p.id].name} learns ${MOVES[step.learn].name}` : null; }).filter(Boolean);
-    pushLog(st, `The company grows more seasoned — you reach level ${lvl}. ${learned.join("; ")}.`, "arrive");
+    pushLog(st, `The company grows more seasoned, you reach level ${lvl}. ${learned.join("; ")}.`, "arrive");
   }
   st.level = lvl;
 }
@@ -579,9 +579,9 @@ const listJoin = (a) => (a.length <= 1 ? a[0] || "" : a.slice(0, -1).join(", ") 
 
 /* =========================== CONSEQUENCES ======================== */
 /* Choices should leave marks that last, not one-line blips. Three systems:
-   - INJURIES: a brutal outcome maims a traveler — their max HP drops and stays
+   - INJURIES: a brutal outcome maims a traveler, their max HP drops and stays
      down until they can rest under a roof in a town. Named, visible, felt.
-   - REPUTATION: kind or cruel choices shift how the road treats you — folk
+   - REPUTATION: kind or cruel choices shift how the road treats you, folk
      help a good name (better prices, steadier morale); a cruel one draws grudges.
    - RUMORS: what you learn at a town's market about the region ahead. */
 
@@ -600,15 +600,79 @@ function injureOne(st, cause) {
   p.injury = inj.name;
   p.maxHp = Math.max(1, Math.round((p.maxHpBase || p.maxHp) * (1 - inj.pct)));
   p.hp = Math.min(p.hp, p.maxHp);
-  const line = `${BY_ID[p.id].name} takes ${inj.name}${cause ? " " + cause : ""} — a wound that will slow them until they can rest in a town.`;
+  const line = `${BY_ID[p.id].name} takes ${inj.name}${cause ? " " + cause : ""}, a wound that will slow them until they can rest in a town.`;
   pushLog(st, line, "bad");
   return line;
 }
 /* Set a bone: clear one injury and restore that traveler's full frame. */
 function mendInjuries(st) {
   let mended = 0;
-  st.party = st.party.map((p) => { if (p.injury) { mended++; return { ...p, injury: null, maxHp: p.maxHpBase || p.maxHp }; } return p; });
+  st.party = st.party.map((p) => {
+    let q = p;
+    if (p.injury) { mended++; q = { ...q, injury: null, maxHp: p.maxHpBase || p.maxHp }; }
+    if (q.disease) { mended++; q = { ...q, disease: null }; }
+    return q;
+  });
   return mended;
+}
+
+/* ---- Sickness on the road: the long trail's quiet killer. Foul water and
+   spoiled food breed the bloody flux; the cold breeds the winter lung; a wound
+   left dirty turns to filth fever. Clean water, a stock of medicine, and a
+   healer's hand ward it off. Neglect lets it drain a traveler day by day, and
+   a sickness left to run can put someone in the ground as surely as any blade.
+   A town's rest, or a cleric's rite, sees it off for good. ---- */
+const DISEASES = [
+  { id: "flux", name: "the bloody flux", daily: 3, desc: "griping and fever, bred of foul water and worse food" },
+  { id: "ague", name: "the shivering ague", daily: 2, desc: "a marsh-fever that burns and breaks and burns again" },
+  { id: "filth", name: "filth fever", daily: 3, desc: "a wound gone hot and sour beneath the wrapping" },
+  { id: "lung", name: "the winter lung", daily: 4, desc: "a deep and rattling cough born of the killing cold" },
+];
+const diseaseBy = (name) => DISEASES.find((d) => d.name === name) || DISEASES[0];
+
+function diseaseTick(st) {
+  const clericHere = st.party.some((p) => p.hp > 0 && BY_ID[p.id].cls === "Cleric");
+  const medicHere = Object.values(st.roles || {}).includes("medic");
+  /* Treat and advance every standing sickness first. */
+  for (let i = 0; i < st.party.length; i++) {
+    const p = st.party[i];
+    if (!p.disease) continue;
+    const d = diseaseBy(p.disease);
+    let drain = d.daily, treated = false;
+    if (st.res.medicine > 0 && (medicHere || clericHere)) { st.res.medicine -= 1; drain = Math.ceil(drain / 2); treated = true; }
+    st.party[i] = { ...p, hp: Math.max(0, p.hp - drain) };
+    if (Math.random() < (treated ? 0.38 : 0.07)) { st.party[i] = { ...st.party[i], disease: null }; pushLog(st, `${BY_ID[p.id].name} throws off ${d.name} at last, weak but mending.`, "good"); }
+  }
+  /* A cleric can pray one sickness clean outright each day. */
+  if (clericHere) {
+    const still = st.party.find((p) => p.disease);
+    if (still && Math.random() < 0.5) { const i = st.party.findIndex((x) => x.id === still.id); const nm = still.disease; st.party[i] = { ...still, disease: null }; pushLog(st, `Hayden speaks the rite of cleansing and burns ${nm} from ${BY_ID[still.id].name}'s blood.`, "good"); }
+  }
+  if (st.party.some((p) => p.disease)) st.morale = clamp(st.morale - 1, 0, 100);
+  /* Then the risk of someone new falling ill. */
+  const able = st.party.filter((p) => p.hp > 0 && !p.disease);
+  if (!able.length) return;
+  const cold = coldFor(st);
+  let risk = 0.014;
+  if (st.res.water < st.party.length * 2 || st.thirstDays > 0) risk += 0.05;
+  if (st.hungerDays > 0) risk += 0.03;
+  if (cold >= 0.5) risk += 0.045;
+  if (st.morale < 35) risk += 0.02;
+  if (st.party.some((p) => p.injury)) risk += 0.02;
+  if (medicHere) risk *= 0.6;
+  if (st.res.water > st.party.length * 6) risk *= 0.7;
+  risk = clamp(risk, 0, 0.2);
+  if (Math.random() < risk) {
+    let pool;
+    if (cold >= 0.5) pool = ["lung"];
+    else if (st.party.some((p) => p.injury) && Math.random() < 0.5) pool = ["filth"];
+    else pool = Math.random() < 0.5 ? ["flux"] : ["ague"];
+    const d = DISEASES.find((x) => x.id === pool[0]) || DISEASES[0];
+    const v = able[(Math.random() * able.length) | 0];
+    const i = st.party.findIndex((x) => x.id === v.id);
+    st.party[i] = { ...v, disease: d.name };
+    pushLog(st, `${BY_ID[v.id].name} has fallen ill with ${d.name}, ${d.desc}. Clean water, medicine, and a steady hand will see it off. Neglect will not.`, "bad");
+  }
 }
 
 /* Reputation runs from cruel (−) to kind (+). It bends town prices and the
@@ -669,7 +733,7 @@ function rollDrops(st, b, enc) {
   return out;
 }
 function battleItem(id) { if (COMBAT_ITEMS[id]) return { it: COMBAT_ITEMS[id], bag: false }; if (ITEMS[id]) return { it: ITEMS[id], bag: true }; return null; }
-/* A plain weapon strike every class always has. Modest, never runs out — the
+/* A plain weapon strike every class always has. Modest, never runs out, the
    reliable fallback when spell slots, ki, or rage are spent. Class attack
    bonuses still apply, so a Fighter's strike lands harder than a Wizard's. */
 const BASIC_STRIKE = { name: "Strike", kind: "attack", target: "enemy", dmg: [1, 8, 2], basic: true, desc: "A basic weapon attack. Always available, costs nothing." };
@@ -771,7 +835,7 @@ function initSetup() {
 function startJourney(s) {
   const lo = s.loadout;
   const spent = loadoutCost(lo);
-  const party = s.picked.map((id) => ({ id, hp: BY_ID[id].maxHp, maxHp: BY_ID[id].maxHp, maxHpBase: BY_ID[id].maxHp, injury: null, res: depletables(BY_ID[id].res) }));
+  const party = s.picked.map((id) => ({ id, hp: BY_ID[id].maxHp, maxHp: BY_ID[id].maxHp, maxHpBase: BY_ID[id].maxHp, injury: null, disease: null, res: depletables(BY_ID[id].res) }));
   const defaultRoles = {};
   const rr = lo.hiredDriver ? ["medic", "forage", "guard", "hunt"] : ["drive", "forage", "guard", "tend"];
   s.picked.forEach((id, i) => { defaultRoles[id] = rr[i] || (lo.hiredDriver ? "guard" : "drive"); });
@@ -875,14 +939,14 @@ function applyRoles(st) {
       pushLog(st, (graze <= 1 && water <= 1) ? `${M.name} finds the frozen ground gives up almost nothing.` : `${M.name} works the land as you go: +${graze} feed, +${water} water.`, graze + water >= 16 ? "good" : graze + water > 0 ? "info" : "warn");
       continue;
     }
-    if (role === "hunt") { // FOOD only — spend arrows for meat
+    if (role === "hunt") { // FOOD only, spend arrows for meat
       const fz = (ZONES[ROUTE[st.legIndex].zone] || ZONES.varisia).forage;
       if (st.res.ammo >= 2) { st.res.ammo -= 2; const c = check(Math.max(M.skills.survival, M.skills.perception), 14); const g = Math.round(bandGain(c.tier, 18, 12, 3) * Math.max(0.25, fz)); st.res.food = clamp(st.res.food + g, 0, 999); pushLog(st, g > 0 ? `${M.name} brings down game: +${g} food (-2 arrows).` : `${M.name} finds no game, and spends arrows chasing it.`, g >= 10 ? "good" : g > 0 ? "info" : "warn"); }
       else pushLog(st, `${M.name} has no arrows left to hunt.`, "warn");
       continue;
     }
     if (role === "tend") { tended = true; const c = check(Math.max(M.skills.survival, M.skills.heal), 13); const g = bandGain(c.tier, 22, 15, 6); st.animalCond = clamp(st.animalCond + g, 0, 100); pushLog(st, `${M.name} tends the team: the beasts settle${fit ? " under sure hands" : ""}.`, "info"); continue; }
-    if (role === "repair") { if (st.res.repair >= 2) { st.res.repair -= 2; const c = check(Math.max(M.skills.athletics, M.skills.disable), 13); const g = bandGain(c.tier, 13, 9, 5); st.wagon = clamp(st.wagon + g, 0, 100); pushLog(st, `${M.name} shores up the frames: wagon +${g} (-2 repair).`, g >= 7 ? "good" : "info"); } else pushLog(st, `${M.name} has no repair stock to work with.`, "warn"); continue; }
+    if (role === "repair") { if (st.res.repair >= 2) { st.res.repair -= 2; const c = check(Math.max(M.skills.athletics, M.skills.disable), 13); const g = bandGain(c.tier, 18, 13, 7); st.wagon = clamp(st.wagon + g, 0, 100); pushLog(st, `${M.name} works the frames and axles over: the wagons come back ${g} sounder for it, at a cost of two from the repair stock.`, g >= 10 ? "good" : "info"); } else pushLog(st, `${M.name} means to mend the wagons, but the repair stock is spent.`, "warn"); continue; }
     if (role === "medic") { const c = check(M.skills.heal, 13); const h = bandGain(c.tier, 13, 9, 4); if (h > 0) { st.party = st.party.map((x) => (x.hp > 0 ? { ...x, hp: clamp(x.hp + h, 0, x.maxHp) } : x)); pushLog(st, `${M.name} binds wounds on the march: +${h} to all.`, "good"); } continue; }
     if (role === "quarter") { thrift = true; pushLog(st, `${M.name} keeps a tight account of the stores; little is wasted today.`, "info"); continue; }
   }
@@ -913,8 +977,9 @@ function advanceDay(s, mode = "travel") {
   eatStores(st, pace.ration);
   upkeepAnimals(st, pace.condWear, tended);
   coldTick(st, coldFor(st));
+  diseaseTick(st);
   relaxDrift(st);
-  st.wagon = clamp(st.wagon - pace.wear * WAGONS[st.wagons].wearMul * (1 + st.weather.drag * 0.5), 0, 100);
+  st.wagon = clamp(st.wagon - pace.wear * WAGONS[st.wagons].wearMul * 1.3 * (1 + st.weather.drag * 0.5), 0, 100);
   st.morale = clamp(st.morale + pace.morale - (st.weather.drag > 0.3 ? 2 : 0), 0, 100);
   if (st.eventCooldown > 0) st.eventCooldown -= 1;
   checkEnd(st); if (st.over) return st;
@@ -944,11 +1009,11 @@ function advanceDay(s, mode = "travel") {
   }
 
   /* On the march, the road's skill challenges come first and combat fills the
-     rest. In camp there are no road "events" — you're not covering ground — but
+     rest. In camp there are no road "events", you're not covering ground, but
      in hostile wild country something can still come for you in the dark. */
   if (!arrived && !st.event && !st.battle && st.eventCooldown <= 0) {
     if (mode === "travel") {
-      if (!maybeEvent(st)) maybeCombat(st);
+      if (!maybeBreakdown(st) && !maybeEvent(st)) maybeCombat(st);
     } else {
       const node = ROUTE[st.legIndex];
       if (node && !node.town && node.type !== "city") maybeCombat(st, 0.5, true);
@@ -996,14 +1061,27 @@ function relaxDrift(st) {
 
 /* Roll the day's ambush. Returns true if it resolved to a fight (or a dodged
    one via scouting), so the day's narrative event is skipped. */
+/* A part gives way under stress. The worse the wagons' state, the rougher the
+   pace, and the harder the ground, the likelier something finally snaps. Keeping
+   the wagons well-mended is what holds this at bay. */
+function maybeBreakdown(st) {
+  if (st.event || st.battle || st.eventCooldown > 0) return false;
+  const stress = 1 - st.wagon / 100;
+  const chance = clamp(0.008 + stress * stress * 0.14 + (st.weather.drag > 0.3 ? 0.02 : 0) + (st.pace === "hard" ? 0.03 : 0), 0, 0.2);
+  if (Math.random() > chance) return false;
+  st.event = { key: pick(["breakWheel", "breakAxle", "breakTongue"]) };
+  st.eventCooldown = 2;
+  return true;
+}
+
 function maybeCombat(st, mult = 1, atCamp = false) {
   const chance = combatChanceFor(st) * mult;
   if (chance <= 0 || Math.random() > chance) return false;
-  if (st.scouted && Math.random() < 0.5) { pushLog(st, "Your scout catches the ambush forming from a rise and steers the caravan wide. No fight today.", "good"); st.eventCooldown = 1; return true; }
+  if (st.scouted && Math.random() < 0.5) { pushLog(st, "Your scout catches the ambush forming from a rise and steers the caravan wide, and there is no fight today.", "good"); st.eventCooldown = 1; return true; }
   const encKey = weightedPick(regionTable(st));
   st.battle = buildRoadBattle(st, encKey);
   st.eventCooldown = 2;
-  pushLog(st, atCamp ? `Something finds your camp in the dark: ${ENCOUNTERS[encKey].name}. Steel comes out.` : `Ambush on the road: ${ENCOUNTERS[encKey].name}. Steel comes out.`, "bad");
+  pushLog(st, atCamp ? `Something finds your camp in the dark. ${ENCOUNTERS[encKey].name}, and steel comes out.` : `An ambush on the road. ${ENCOUNTERS[encKey].name}, and steel comes out.`, "bad");
   return true;
 }
 
@@ -1024,7 +1102,7 @@ function buyPrice(st, node, good) {
 const ZONE_COST = { varisia: 1.0, linnorm: 1.25, crown: 2.3, tianxia: 1.1 };
 
 /* Journey's end: the throne is taken. The epilogue is colored by how the three
-   pillars were met — the blessing carried, the blade recovered, the storm broken. */
+   pillars were met, the blessing carried, the blade recovered, the storm broken. */
 function winGame(st) {
   st.over = "win";
   const f = st.flags || {};
@@ -1159,7 +1237,7 @@ const EVENTS = {
       { id: "sell", label: "Sell him a wagonload of goods", outcomes: { good: { text: "You clear some cargo at a decent roadside price. Coin in hand beats coin in the east.", days: 0, roadSell: 1.15 } } },
       { id: "haggle", label: "Haggle hard (Bard/Rogue: Diplomacy)", gate: ["lem", "vex"], skill: "diplomacy", dc: 15, outcomes: { good: { text: "You talk him up to a town-and-a-half price. He shakes his head, grinning, and pays.", days: 0, roadSell: 1.45 }, fail: { text: "He will not be moved far. Still, a fair price for the road.", days: 0, roadSell: 1.15 }, bad: { text: "You push too hard; he shrugs and rolls on. Nothing sold.", days: 0 } } },
       { id: "buysupply", label: "Buy provisions off him (40 gold)", need: { gold: 40 }, outcomes: { good: { text: "Food, water, feed, and a little medicine, all off the back of his cart.", days: 0, cost: { gold: 40 }, gain: { food: 16, water: 16, feed: 14, medicine: 2 } } } },
-      { id: "rob", label: "Take his cart and leave him the road", gate: ["Barbarian", "Fighter", "Rogue"], skill: "athletics", dc: 12, outcomes: { good: { text: "He backs off his own cart, hands raised, and you help yourselves. He'll live — and he'll talk. Word of a caravan that robs honest traders will run ahead of you now.", days: 0, gain: { food: 20, water: 12, feed: 12, medicine: 3, gold: 25 }, rep: -2 } } },
+      { id: "rob", label: "Take his cart and leave him the road", gate: ["Barbarian", "Fighter", "Rogue"], skill: "athletics", dc: 12, outcomes: { good: { text: "He backs off his own cart, hands raised, and you help yourselves. He'll live, and he'll talk. Word of a caravan that robs honest traders will run ahead of you now.", days: 0, gain: { food: 20, water: 12, feed: 12, medicine: 3, gold: 25 }, rep: -2 } } },
       { id: "wave", label: "Wave him on", outcomes: { good: { text: "You nod and pass. The road is long and you have miles to make.", days: 0 } } },
     ],
   },
@@ -1188,7 +1266,7 @@ const EVENTS = {
       Ranger: "Kass counts a full warren's worth, but goblins scatter if you break their nerve.",
       Bard: "Lem could out-sing the little maniacs; they love a show more than a fight.",
       Rogue: "Vex can snuff the cache before it takes a wagon with it.",
-      Wizard: "Ondrel notes the fireworks are Tian-made — worth good coin intact.",
+      Wizard: "Ondrel notes the fireworks are Tian-made, worth good coin intact.",
       Barbarian: "Sura just wants to charge into the reeds roaring.",
     },
     options: [
@@ -1215,7 +1293,7 @@ const EVENTS = {
   },
   aurora: {
     title: "The Lights Overhead", where: (n) => (ZONES[n.zone].cold || 0) >= 1, boon: true,
-    body: "The whole northern sky catches fire — green and violet curtains rippling from horizon to horizon. Even the beasts go still to watch. For one night the ice does not feel like it wants you dead.",
+    body: "The whole northern sky catches fire, green and violet curtains rippling from horizon to horizon. Even the beasts go still to watch. For one night the ice does not feel like it wants you dead.",
     info: {
       Druid: "Yarrow says the old Erutaki call this the dance of the dead, and it is a blessing to see it.",
       Cleric: "Hayden calls it grace, and the camp bows its head.",
@@ -1246,7 +1324,7 @@ const EVENTS = {
   spooked: {
     title: "Something in the Dark",
     where: (n) => n.type === "wild",
-    body: "The animals catch a scent and go rigid — ears back, eyes rolling. Somewhere out past the firelight, a big predator is pacing the caravan, and the team is a heartbeat from bolting.",
+    body: "The animals catch a scent and go rigid, ears back, eyes rolling. Somewhere out past the firelight, a big predator is pacing the caravan, and the team is a heartbeat from bolting.",
     info: {
       Ranger: "Kass reads it: a hunting cat, circling. Hold the beasts and it may lose its nerve first.",
       Druid: "Yarrow can speak the fear out of them, if the party stays still.",
@@ -1256,7 +1334,7 @@ const EVENTS = {
     options: [
       { id: "settle", label: "Settle the team (Ranger/Druid: Survival)", gate: ["Ranger", "Druid"], skill: "survival", dc: 14, outcomes: { good: { text: "A steady hand and a low voice; the animals blow and stamp, then quiet. The shadow slinks off, and nothing is lost.", days: 0, morale: 2 }, fail: { text: "You hold most of them, but one mule tears loose and bolts before you catch it. Cost you condition wrestling it back.", days: 0, hurtCond: 12 }, bad: { text: "The team panics as one. A tangle of harness, a cracked shaft, and someone dragged under the hooves before you calm it.", days: 0, hurtCond: 20, hurtWagon: 8, riskAnimal: true, injure: 0.6, injureCause: "under the panicked team" } } },
       { id: "front", label: "Guards to the front, drive it off", gate: ["Fighter", "Barbarian", "Paladin"], skill: "athletics", dc: 13, outcomes: { good: { text: "Torches up, steel bared, a wall of shouting between the team and the dark. The predator decides you are more trouble than a meal.", days: 0, morale: 1 }, fail: { text: "It circles a while longer, keeping everyone on edge and sleepless. Morale sags.", days: 0, morale: -3 } } },
-      { id: "ride", label: "Break camp and move — now", outcomes: { good: { text: "You hitch up in the dark and roll out fast, hearts pounding. Whatever it was, it doesn't follow. Nobody sleeps much.", days: 0, morale: -2 } } },
+      { id: "ride", label: "Break camp and move out", outcomes: { good: { text: "You hitch up in the dark and roll out fast, hearts pounding. Whatever it was, it doesn't follow. Nobody sleeps much.", days: 0, morale: -2 } } },
     ],
   },
   bear: {
@@ -1264,7 +1342,7 @@ const EVENTS = {
     where: (n) => n.type === "wild" && (ZONES[n.zone].cold || 0) < 1,
     body: "A great shaggy bear stands square in the trail, unbothered, chewing. It has decided this is its road today, and it is bigger than any argument you'd care to make.",
     info: {
-      Ranger: "Kass says back off slow. It's not hunting — it just wants the berries.",
+      Ranger: "Kass says back off slow. It's not hunting, it just wants the berries.",
       Barbarian: "Sura reckons a big enough roar settles who owns what.",
       Druid: "Yarrow can ask it, in a manner of speaking, to move along.",
     },
@@ -1278,7 +1356,7 @@ const EVENTS = {
   rockslide: {
     title: "The Way Is Shut",
     where: (n) => n.type === "wild",
-    body: "A slope has let go across the trail — a tumble of broken rock and torn earth, too high to simply drive over. The road is closed until you open it.",
+    body: "A slope has let go across the trail, a tumble of broken rock and torn earth, too high to simply drive over. The road is closed until you open it.",
     info: {
       Fighter: "Dram can move stone. Slow, brutal work, but it clears.",
       Barbarian: "Sura will shift the whole hillside if you give him room.",
@@ -1293,9 +1371,9 @@ const EVENTS = {
   washout: {
     title: "The Road Turned to Mire",
     where: (n) => n.type === "wild" && (ZONES[n.zone].cold || 0) < 1,
-    body: "Rain has taken the road out — a long stretch churned to axle-deep mud and running water. Drive it wrong and a wagon goes in to the bed.",
+    body: "Rain has taken the road out, a long stretch churned to axle-deep mud and running water. Drive it wrong and a wagon goes in to the bed.",
     info: {
-      Rogue: "Vex can lay a corduroy of cut poles across the worst of it — costs repair stock, but it holds.",
+      Rogue: "Vex can lay a corduroy of cut poles across the worst of it, costs repair stock, but it holds.",
       Ranger: "Kass knows the high ground; there's a firmer line if you look.",
     },
     options: [
@@ -1322,14 +1400,14 @@ const EVENTS = {
   scree: {
     title: "The Loose Slope",
     where: (n) => n.type === "wild" && (ZONES[n.zone].cold >= 1 || n.name === "Stormspear Hills" || n.name === "Rimethirst Pass"),
-    body: "The trail crosses a long shoulder of loose scree that shifts and slides underfoot. One bad step and a wagon — or a beast — goes down the slope.",
+    body: "The trail crosses a long shoulder of loose scree that shifts and slides underfoot. One bad step and a wagon, or a beast, goes down the slope.",
     info: {
       Monk: "Rook can walk the loads across light-footed, a beast at a time.",
       Ranger: "Kass can pick the settled line where the stone holds.",
     },
     options: [
       { id: "lead", label: "Lead the team across on foot (Survival/Athletics)", gate: ["Ranger", "Monk", "Druid"], skill: "survival", dc: 14, outcomes: { good: { text: "One beast at a time, coaxed across the settled line while everyone holds their breath. Slow, but nothing lost.", days: 0, morale: 1 }, fail: { text: "A wagon slews and slides a dozen feet before it catches. You save it, barely, cracked and scraped.", days: 0, hurtWagon: 10 } } },
-      { id: "rushscree", label: "Push across quick before it shifts", outcomes: { good: { text: "You hurry the caravan over the loose ground. It slides under you the whole way — a shaft snaps, a beast goes to its knees — but you make it.", days: 0, hurtWagon: 7, riskAnimal: true } } },
+      { id: "rushscree", label: "Push across quick before it shifts", outcomes: { good: { text: "You hurry the caravan over the loose ground. It slides under you the whole way, a shaft snaps, a beast goes to its knees, but you make it.", days: 0, hurtWagon: 7, riskAnimal: true } } },
     ],
   },
 
@@ -1340,7 +1418,7 @@ const EVENTS = {
     body: "A ragged band of pilgrims shares the road a while, bound for some shrine over the next range. They are footsore and glad of company, and full of small talk about weather and saints and the price of bread.",
     options: [
       { id: "share", label: "Share the road and swap stories", outcomes: { good: { text: "You walk together an afternoon, trading road tales and bad jokes. The company rolls on lighter of heart, and the pilgrims speak well of you down the road.", days: 0, morale: 3, rep: 1 } } },
-      { id: "news", label: "Ask what lies on the road ahead", outcomes: { good: { text: "They tell you what they've seen — a ferry running high, a village with good grain, a stretch best passed by daylight. Useful, and kindly meant.", days: 0, morale: 1 } } },
+      { id: "news", label: "Ask what lies on the road ahead", outcomes: { good: { text: "They tell you what they've seen, a ferry running high, a village with good grain, a stretch best passed by daylight. Useful, and kindly meant.", days: 0, morale: 1 } } },
       { id: "wavepilg", label: "Nod and keep your own pace", outcomes: { good: { text: "You tip your hat and press on. They wave you off with a blessing you don't ask for and don't refuse.", days: 0 } } },
     ],
   },
@@ -1359,7 +1437,7 @@ const EVENTS = {
     where: (n) => n.type === "wild",
     body: "Wagons appear on the road ahead, bound the way you came. The two trains slow and pass close, and for a few minutes the drivers lean across to trade the only currency that matters out here: word of what's behind them.",
     options: [
-      { id: "swap", label: "Trade road-news across the wagons", outcomes: { good: { text: "You swap the state of the road, wagon to wagon — where the going's good, where it isn't, who to trust and who not. Both trains roll on the wiser.", days: 0, morale: 2 } } },
+      { id: "swap", label: "Trade road-news across the wagons", outcomes: { good: { text: "You swap the state of the road, wagon to wagon, where the going's good, where it isn't, who to trust and who not. Both trains roll on the wiser.", days: 0, morale: 2 } } },
       { id: "askmkt", label: "Ask after prices where they've been", outcomes: { good: { text: "They tell you what sold well and what didn't in the towns ahead. Worth knowing, when your living rides in crates.", days: 0, morale: 1 } } },
       { id: "nodcar", label: "A nod, and both roll on", outcomes: { good: { text: "A raised hand, a tip of the hat, and the two caravans slide past each other into their separate distances.", days: 0 } } },
     ],
@@ -1391,13 +1469,13 @@ const EVENTS = {
     options: [
       { id: "ride", label: "Let a few ride the tailboard a mile", outcomes: { good: { text: "You swing a couple up onto the tailboard for a mile of giddy adventure, then set them down to run home breathless with the tale. Word of the kind caravan runs ahead of you.", days: 0, morale: 3, rep: 1 } } },
       { id: "coin", label: "Toss them a coin and a wave", cost: { gold: 2 }, outcomes: { good: { text: "A scatter of copper and a scramble of laughter, and the caravan rolls on trailing cheers. Cheap, at the price.", days: 0, morale: 2 } } },
-      { id: "shoo", label: "Shoo them off — no time", outcomes: { good: { text: "You wave them back from the wheels and press on. Their cheering curdles to jeers, and word of the cold-hearted caravan runs ahead of you.", days: 0, morale: -1, rep: -1 } } },
+      { id: "shoo", label: "Shoo them off, no time", outcomes: { good: { text: "You wave them back from the wheels and press on. Their cheering curdles to jeers, and word of the cold-hearted caravan runs ahead of you.", days: 0, morale: -1, rep: -1 } } },
     ],
   },
   cairns: {
     title: "The Cairns on the Ice",
     where: (n) => (ZONES[n.zone].cold || 0) >= 1,
-    body: "You pass a line of snow-humped cairns beside the trail — stones piled over those who came this way before you and got no farther. Someone has kept them tended. Someone always does.",
+    body: "You pass a line of snow-humped cairns beside the trail, stones piled over those who came this way before you and got no farther. Someone has kept them tended. Someone always does.",
     options: [
       { id: "pay", label: "Stop and pay them respect", outcomes: { good: { text: "You halt a moment and add a stone to the nearest pile, as is the custom. No one speaks. When you roll on, the company holds a little closer together against the cold.", days: 0, morale: 2 } } },
       { id: "onward", label: "Press on past in silence", outcomes: { good: { text: "You do not stop. You have every intention of not joining them. The wagons roll by, and the white closes over the cairns behind you.", days: 0 } } },
@@ -1409,21 +1487,67 @@ const EVENTS = {
     title: "A Kindness Returned",
     where: (n) => n.type === "wild",
     onlyIf: (st) => repFx(st).kind,
-    body: "A rider overtakes the caravan at a gallop, then reins in with open hands. You've been named to him — the caravan that shares its fire and helps folk on the road. He has news, and he means you well.",
+    body: "A rider overtakes the caravan at a gallop, then reins in with open hands. You've been named to him, the caravan that shares its fire and helps folk on the road. He has news, and he means you well.",
     options: [
       { id: "hear_warn", label: "Hear his warning", outcomes: { good: { text: "Reavers are working the country just ahead, he says, and he tells you exactly where. Forewarned, you slip past the trap they'd laid. Your good name just saved lives.", days: 0, morale: 3, gain: { ammo: 4 } } } },
-      { id: "trade_kind", label: "Share a meal and trade news", cost: { food: 2 }, outcomes: { good: { text: "You break bread with him. He leaves you better provisioned than he found you and carries your name further still — the kind caravan, worth helping.", days: 0, morale: 3, rep: 1, gain: { medicine: 2 } } } },
+      { id: "trade_kind", label: "Share a meal and trade news", cost: { food: 2 }, outcomes: { good: { text: "You break bread with him. He leaves you better provisioned than he found you and carries your name further still, the kind caravan, worth helping.", days: 0, morale: 3, rep: 1, gain: { medicine: 2 } } } },
     ],
   },
   reckoning_cruel: {
     title: "A Debt Come Due",
     where: (n) => n.type === "wild",
     onlyIf: (st) => repFx(st).cruel,
-    body: "Armed men step out of the rocks ahead and behind, unhurried. Word of your caravan has run before you too — but not the kind word. These are folk you've wronged, or friends of them, and they've been waiting.",
+    body: "Armed men step out of the rocks ahead and behind, unhurried. Word of your caravan has run before you too, but not the kind word. These are folk you've wronged, or friends of them, and they've been waiting.",
     options: [
       { id: "pay_off", label: "Buy your way clear", cost: { gold: 120 }, outcomes: { good: { text: "You empty a heavy purse into a waiting hand. They melt back into the rocks, grinning. Coin spent to answer for the name you've made.", days: 0, morale: -2 } } },
       { id: "face_them", label: "Draw steel and answer for it", battle: "banditToll" },
-      { id: "make_amends", label: "Own it, and try to make it right", gate: ["Bard", "Cleric", "Paladin"], skill: "diplomacy", dc: 16, outcomes: { good: { text: "You step down unarmed and speak plainly — no excuses. It's a near thing, but something in it lands. They let you pass, and a little of the poison drains from your name.", days: 0, morale: 2, rep: 2 }, fail: { text: "Fine words, but they've heard fine words from you before. They take a wagon's worth of goods as payment and go.", days: 0, roadSell: 0, dumpCargo: true, morale: -4 } } },
+      { id: "make_amends", label: "Own it, and try to make it right", gate: ["Bard", "Cleric", "Paladin"], skill: "diplomacy", dc: 16, outcomes: { good: { text: "You step down unarmed and speak plainly and make no excuses. It's a near thing, but something in it lands. They let you pass, and a little of the poison drains from your name.", days: 0, morale: 2, rep: 2 }, fail: { text: "Fine words, but they've heard fine words from you before. They take a wagon's worth of goods as payment and go.", days: 0, roadSell: 0, dumpCargo: true, morale: -4 } } },
+    ],
+  },
+
+  breakWheel: {
+    title: "A Wheel Gives Way",
+    where: () => false,
+    body: "A crack like a pistol shot, and the lead wagon lurches and grinds to a halt. A wheel has split clean through the felloe, its spokes splayed like broken fingers. There is no going on until it is dealt with.",
+    info: {
+      Rogue: "Vex can true a spare onto the hub within the hour, if you carry the stock for it.",
+      Fighter: "Dram has changed a hundred wheels in the field. Give him the parts and he will have you rolling.",
+      Ranger: "Kass reckons you could bind and brace the old wheel enough to limp to the next town, though it will not love the miles.",
+    },
+    options: [
+      { id: "spare", label: "Fit a spare wheel from your repair stock", need: { repair: 4 }, cost: { repair: 4 }, outcomes: { good: { text: "You jack the axle, draw the ruined wheel, and true a fresh one onto the hub. An hour of hard work, and the wagons roll sound again.", days: 0, fixWagon: 40, morale: 1 } } },
+      { id: "rig", label: "Brace and bind the broken wheel (Athletics)", skill: "athletics", dc: 14, outcomes: { good: { text: "Lashings of rope and a splint of green wood, and the wheel holds. Not pretty, but it turns.", days: 1, fixWagon: 18 }, fail: { text: "The binding slips twice before it takes, and the day bleeds away in the fixing of it.", days: 1, fixWagon: 10 }, bad: { text: "Your patch fails within the mile and has to be done over. The wagon is the worse for the whole affair.", days: 1, hurtWagon: 10 } } },
+      { id: "limp", label: "Chock it and limp on as you are", outcomes: { good: { text: "You wedge the split with a wooden shim and press on at a crawl, every rut a fresh worry. The wagons take a hard beating for it.", days: 0, hurtWagon: 22 } } },
+    ],
+  },
+  breakAxle: {
+    title: "A Broken Axle",
+    where: () => false,
+    body: "The whole wagon drops with a shriek of tortured wood. The front axle has sheared through at the boss, and the bed sits crooked in the ruts. This is the break every teamster dreads.",
+    info: {
+      Fighter: "Dram can hew and fit a new axle-tree, if you have the timber and the stock to spare.",
+      Ranger: "Kass can fell and shape a rough axle from a straight bole, given a day to do it.",
+      Wizard: "Ondrel notes the break is at least a clean one, which is the single mercy of it. A fresh axle will seat true.",
+    },
+    options: [
+      { id: "spare", label: "Fit a fresh axle from your repair stock", need: { repair: 6 }, cost: { repair: 6 }, outcomes: { good: { text: "You unload the bed, sweat the ruined axle out, and drive a fresh one home. Heavy, filthy work, but by dusk the wagon sits square and true.", days: 1, fixWagon: 45, morale: 1 } } },
+      { id: "hew", label: "Fell and shape a new axle-tree (Survival)", gate: ["Ranger", "Druid", "Fighter"], skill: "survival", dc: 15, outcomes: { good: { text: "You find a straight, sound bole, fell it, and work it down to a serviceable axle by firelight. It costs a day, but it holds.", days: 1, fixWagon: 30 }, fail: { text: "The first timber checks and splits under the drawknife. The second serves, but two days are gone to it.", days: 2, fixWagon: 22 } } },
+      { id: "limp", label: "Splint it and crawl toward the next town", outcomes: { good: { text: "You lash the break with iron banding and green wood and creep onward, holding your breath at every stone. The wagon is badly the worse for it.", days: 1, hurtWagon: 28 } } },
+    ],
+  },
+  breakTongue: {
+    title: "The Wagon Tongue Snaps",
+    where: () => false,
+    body: "On a bad pull the draft-tongue cracks and parts, and the team surges free of the wagon in a tangle of harness and panicked beasts. No one is hurt, this time. But a wagon hitched to nothing is going nowhere.",
+    info: {
+      Rogue: "Vex can splice and iron-band the tongue back together in short order.",
+      Barbarian: "Sura can hold the ends true by main strength while someone bands them.",
+      Druid: "Yarrow can settle the spooked team while the work is done.",
+    },
+    options: [
+      { id: "spare", label: "Fit a new tongue from your repair stock", need: { repair: 3 }, cost: { repair: 3 }, outcomes: { good: { text: "You draw the shattered tongue and bolt a fresh one into the hounds. Quick work, and the team is hitched and hauling within the hour.", days: 0, fixWagon: 30, morale: 1 } } },
+      { id: "splice", label: "Splice and iron-band the break (Devices)", skill: "disable", dc: 13, outcomes: { good: { text: "Scarfed, glued, and banded tight with strap-iron, the mended tongue is very nearly as good as new.", days: 0, fixWagon: 20 }, fail: { text: "It takes three tries and most of the afternoon, but it holds in the end.", days: 1, fixWagon: 14 } } },
+      { id: "limp", label: "Lash it rough and go gently", outcomes: { good: { text: "A crude lashing of rope and rawhide gets you moving, but the whole rig flexes and groans with every pull, and the wagons suffer for it.", days: 0, hurtWagon: 16 } } },
     ],
   },
 };
@@ -1504,6 +1628,7 @@ function applyOutcome(st, r, ev) {
   if (dmg && st.guards > 0) { const soak = Math.min(dmg, st.guards * 3 + roll(1, 4)); dmg = Math.max(0, dmg - soak); if (soak > 0) pushLog(st, `Your guards take the brunt; ${soak} damage turned aside.`, "info"); }
   if (dmg) damageAll(st, dmg, "The party takes a beating");
   if (r.hurtWagon) st.wagon = clamp(st.wagon - r.hurtWagon, 0, 100);
+  if (r.fixWagon) st.wagon = clamp(st.wagon + r.fixWagon, 0, 100);
   if (r.hurtRepair) st.res.repair = clamp(st.res.repair - r.hurtRepair, 0, 999);
   if (r.hurtCond) st.animalCond = clamp(st.animalCond - r.hurtCond, 0, 100);
   if (r.hurtAnimals) st.animals = Math.max(0, st.animals - r.hurtAnimals);
@@ -1520,13 +1645,13 @@ function applyOutcome(st, r, ev) {
 /* =============================== STORY BEATS ====================== */
 /* The three fixed pillars of Ameiko's road. Each is a class-flavored decision
    that sets a persistent flag, then hands straight to that pillar's boss. HOW
-   you meet the beat — prepared or rushed, sheltered or exposed, with the blade
-   or without — rides forward as a real edge or handicap in the fight and colors
+   you meet the beat, prepared or rushed, sheltered or exposed, with the blade
+   or without, rides forward as a real edge or handicap in the fight and colors
    the ending. These are do-or-die: a story boss lost or fled ends the run. */
 const BEATS = {
   brinewall: {
     title: "The Vault of Brinewall",
-    body: "Brinewall's ruin claws at a grey sky. Beneath the broken keep lies the Amatatsu Seal — the heart of Ameiko's birthright — and something old and patient has guarded it these long years. How you go in will decide how you come out.",
+    body: "Brinewall's ruin claws at a grey sky. Beneath the broken keep lies the Amatatsu Seal, the heart of Ameiko's birthright, and something old and patient has guarded it these long years. How you go in will decide how you come out.",
     info: {
       Rogue: "The vault wards are old Minkaian work. Give me the time and I'll unpick them clean.",
       Wizard: "Those sigils are Tian. I can read the safe path down, if you trust the reading.",
@@ -1540,19 +1665,19 @@ const BEATS = {
       { id: "divine", label: "Read the Minkaian sigils for the safe path", gate: "Wizard", skill: "knowledge", dc: 17 },
       { id: "rite", label: "Lay the restless dead to rest first", gate: ["Cleric", "Paladin"], skill: "heal", dc: 16 },
       { id: "force", label: "Force the seaward doors and press in", skill: "athletics", dc: 15 },
-      { id: "rush", label: "No time — go straight in", rushed: true },
+      { id: "rush", label: "No time, go straight in", rushed: true },
     ],
     boss: "brinewall",
     apply(st, opt, good) {
-      if (good) { st.flags.brinewall = "prepared"; st.flags.suishen = true; pushLog(st, "You reach the vault in good order. The Amatatsu Seal is recovered — and beside it, wrapped in oilcloth, the ancestral blade Suishen. Ameiko's hands shake as she lifts it, and the steel answers with a low, waking hum.", "good"); }
+      if (good) { st.flags.brinewall = "prepared"; st.flags.suishen = true; pushLog(st, "You reach the vault in good order. The Amatatsu Seal is recovered, and beside it, wrapped in oilcloth, the ancestral blade Suishen. Ameiko's hands shake as she lifts it, and the steel answers with a low, waking hum.", "good"); }
       else { st.flags.brinewall = "rushed"; pushLog(st, "You snatch the Seal, but the guardian is upon you before you can search the vault, and there is no time to look for more.", "warn"); }
     },
   },
   highice: {
     title: "The Hungry Storm",
-    body: "Ovorikheer Pass is the roof of the world, and the storm that lives here is no accident of weather — it hunts. Wind like knives, and something vast and cold turning at its heart. You must go into it; the only question is how.",
+    body: "Ovorikheer Pass is the roof of the world, and the storm that lives here is no accident of weather, it hunts. Wind like knives, and something vast and cold turning at its heart. You must go into it; the only question is how.",
     info: {
-      Druid: "This storm has a mind. I can find the still eye at its center — but read it wrong and it closes on us.",
+      Druid: "This storm has a mind. I can find the still eye at its center, but read it wrong and it closes on us.",
       Ranger: "There's shelter in the lee of the ice-cliffs. We dig in, wait for the worst to pass, and go in rested.",
       Cleric: "Whatever wears this storm hates the living. Steel your hearts; we go through together.",
     },
@@ -1564,7 +1689,7 @@ const BEATS = {
     boss: "highice",
     apply(st, opt, good) {
       if (opt.id === "shelter") { st.flags.highice = "sheltered"; st.morale = clamp(st.morale + 2, 0, 100); pushLog(st, "You dig into the lee of the ice and let the worst of it scream past overhead. Costly in days and stores, but you come to its heart rested and whole.", "info"); }
-      else if (opt.id === "eye") { if (good) { st.flags.highice = "eye"; pushLog(st, `${(st.lastCheck && st.lastCheck.who) || "Your guide"} finds the eye — a still, blue-white silence at the storm's core — and leads you straight to its heart.`, "good"); } else { st.flags.highice = "exposed"; damageAll(st, roll(1, 6), "The storm flays the caravan"); pushLog(st, "The reading goes wrong. The storm folds shut around you and you fight your way to its heart half-frozen.", "bad"); } }
+      else if (opt.id === "eye") { if (good) { st.flags.highice = "eye"; pushLog(st, `${(st.lastCheck && st.lastCheck.who) || "Your guide"} finds the eye, a still, blue-white silence at the storm's core, and leads you straight to its heart.`, "good"); } else { st.flags.highice = "exposed"; damageAll(st, roll(1, 6), "The storm flays the caravan"); pushLog(st, "The reading goes wrong. The storm folds shut around you and you fight your way to its heart half-frozen.", "bad"); } }
       else { st.flags.highice = "exposed"; damageAll(st, roll(1, 6), "The storm flays the caravan as you force through"); pushLog(st, "You claw into the storm's heart with no shelter and no breath to spare.", "bad"); }
     },
   },
@@ -1649,7 +1774,7 @@ function crossFerry(s, mode) {
   else if (chk.tier === "fail") { st.wagon = clamp(st.wagon - 10, 0, 100); damageAll(st, roll(1, 4), ice ? "The crossing batters and freezes the party" : "The ford soaks and batters the party"); if (st.cargo.glass > 0) st.cargo.glass = Math.ceil(st.cargo.glass * 0.7); pushLog(st, "A hard crossing; the wagon strains and everyone suffers for it.", "warn"); }
   else { // a critical failure at the water
     if (useMark(st, "lucky_stone")) {
-      pushLog(st, `${st.ferry.name} nearly ends the journey — but the hermit's river-stone seems to turn cold in your hand, and at the last moment the caravan finds its footing. 'Luck at the water,' he said. Spent now.`, "good");
+      pushLog(st, `${st.ferry.name} nearly ends the journey, but the hermit's river-stone seems to turn cold in your hand, and at the last moment the caravan finds its footing. 'Luck at the water,' he said. Spent now.`, "good");
       st.wagon = clamp(st.wagon - 6, 0, 100); st.lastCheck = chk; st.ferry = null; checkEnd(st); return st;
     }
     st.wagon = clamp(st.wagon - 20, 0, 100); if (Math.random() < 0.4) st.animals = Math.max(0, st.animals - 1); damageAll(st, roll(1, 6), ice ? "A crevasse nearly swallows a wagon" : "The current nearly takes a wagon"); pushLog(st, `${st.ferry.name} very nearly ends the journey.`, "bad");
@@ -1924,7 +2049,7 @@ function playerAction(b, action) {
     const li = battleItem(action.id); if (!li) return b; const it = li.it;
     if (li.bag) { if ((b.bag[action.id] || 0) < 1) return b; b.bag[action.id] -= 1; }
     else { if ((b.supply[it.supply] || 0) < it.cost) return b; b.supply[it.supply] -= it.cost; }
-    if (it.kind === "flee") { logPush(b, `${actor.name} hurls a smoke bomb — the caravan vanishes into the murk and is gone.`, "start"); b.result = "fled"; b.awaiting = null; return b; }
+    if (it.kind === "flee") { logPush(b, `${actor.name} hurls a smoke bomb, the caravan vanishes into the murk and is gone.`, "start"); b.result = "fled"; b.awaiting = null; return b; }
     performMove(b, actor, it, action.target);
   }
   else { const mv = MOVES[action.id]; if (!moveUsable(actor, mv)) return b; performMove(b, actor, mv, action.target); }
@@ -1968,7 +2093,7 @@ function finishBattle(state) {
       if (dr.valuables.length) parts.push("you gather " + listJoin(dr.valuables.map((id) => VALUABLES[id].name)));
       if (dr.item) parts.push(`a ${ITEMS[dr.item].name} for the satchel`);
       pushLog(road, "Picking over the fallen, " + (parts.length ? parts.join(", ") : "little of worth") + ".", "good");
-      if (dr.relic) pushLog(road, `And something rare among it all — the ${RELICS[dr.relic].name}. ${RELICS[dr.relic].desc}`, "arrive");
+      if (dr.relic) pushLog(road, `And something rare among it all, the ${RELICS[dr.relic].name}. ${RELICS[dr.relic].desc}`, "arrive");
     }
     if (b.story) {
       road.battle = null;
@@ -2045,13 +2170,13 @@ const INTRO = {
   arrival: {
     stage: "The Rusty Dragon, Sandpoint. Rain on the shutters, and a fire kept low. Ameiko Kaijitsu sets down a lacquered box that has come a very long way.",
     speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
-    body: "You've hauled goods the length of Varisia and back, they tell me, and never lost a wagon you meant to keep. Good. Because I need someone who can get a caravan somewhere no sane merchant would take one — and keep us alive doing it.",
+    body: "You've hauled goods the length of Varisia and back, they tell me, and never lost a wagon you meant to keep. Good. Because I need someone who can get a caravan somewhere no sane merchant would take one, and keep us alive doing it.",
     choices: [{ label: "Where are we going?", to: "job" }],
   },
   job: {
     stage: "She opens the box. Inside: an old seal, a folded map that runs off the edge of the world, and a name written in Tian script.",
     speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
-    body: "Minkai. On the far side of Tian Xia. A throne that's mine by blood sits under a usurper who calls himself the Jade Regent, and the only road home runs east — up to the Linnorm Kings, across the Crown of the World, and down into the Dragon Empires. Fourteen hundred miles, near enough.",
+    body: "Minkai. On the far side of Tian Xia. A throne that's mine by blood sits under a usurper who calls himself the Jade Regent, and the only road home runs east, up to the Linnorm Kings, across the Crown of the World, and down into the Dragon Empires. Fourteen hundred miles, near enough.",
     choices: [
       { label: "That's a trade route as much as a quest.", to: "trade" },
       { label: "What's out there?", to: "catch" },
@@ -2060,19 +2185,19 @@ const INTRO = {
   trade: {
     stage: "A wry almost-smile. She was a merchant's daughter before she was anyone's heir.",
     speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
-    body: "It is. Fill the wagons in Sandpoint, buy furs and amber in Kalsgard, and every crate is worth more the farther east it rides — silk and jade sell for a fortune back the way we came. What we make on the road is ours; it's what buys guides and grain when the Crown tries to kill us. And it will try.",
+    body: "It is. Fill the wagons in Sandpoint, buy furs and amber in Kalsgard, and every crate is worth more the farther east it rides, silk and jade sell for a fortune back the way we came. What we make on the road is ours; it's what buys guides and grain when the Crown tries to kill us. And it will try.",
     choices: [{ label: "What's out there?", to: "catch" }],
   },
   catch: {
     stage: "Her voice drops. The rain fills the quiet.",
     speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
-    body: "Goblins in the Brinestump, first. A guardian in my own family's ruin at Brinewall. Then the north, and past it the Crown of the World — polar ice that eats caravans, and a living storm that guards the high pass. If we reach Minkai, the Five Storms and their Regent are waiting. Three trials, three monsters. You should know that going in.",
+    body: "Goblins in the Brinestump, first. A guardian in my own family's ruin at Brinewall. Then the north, and past it the Crown of the World, polar ice that eats caravans, and a living storm that guards the high pass. If we reach Minkai, the Five Storms and their Regent are waiting. Three trials, three monsters. You should know that going in.",
     choices: [{ label: "Then you'll want a company you can trust.", to: "company" }],
   },
   company: {
     stage: "She slides a purse across the table. It thuds, honest and heavy.",
     speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
-    body: "Four hands you'd want on a very bad night — someone to read wild country, someone to keep breath in the wounded, someone to end the arguments steel makes. Sandpoint's full of such folk tonight. Choose well. The road out here remembers a poor choice far longer than you will.",
+    body: "Four hands you'd want on a very bad night, someone to read wild country, someone to keep breath in the wounded, someone to end the arguments steel makes. Sandpoint's full of such folk tonight. Choose well. The road out here remembers a poor choice far longer than you will.",
     choices: [
       { label: "I've run worse roads than this.", to: "muster_bold" },
       { label: "I'll take it careful, and take us all home.", to: "muster_wary" },
@@ -2082,7 +2207,7 @@ const INTRO = {
   muster_bold: {
     stage: "She almost laughs.",
     speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
-    body: "The Crown will put a price on that confidence soon enough. But I'll take it over fear. Muster your four, caravan-master — we roll out at first light.",
+    body: "The Crown will put a price on that confidence soon enough. But I'll take it over fear. Muster your four, caravan-master, we roll out at first light.",
     choices: [{ label: "Assemble the company →", to: "party" }],
   },
   muster_wary: {
@@ -2092,9 +2217,9 @@ const INTRO = {
     choices: [{ label: "Assemble the company →", to: "party" }],
   },
   muster_greed: {
-    stage: "A short, dry laugh — a merchant's laugh.",
+    stage: "A short, dry laugh, a merchant's laugh.",
     speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
-    body: "Haul hard and sell high, then, and we'll both come out of this rich — if we come out of it. Muster your four; the season won't wait on us.",
+    body: "Haul hard and sell high, then, and we'll both come out of this rich, if we come out of it. Muster your four; the season won't wait on us.",
     choices: [{ label: "Assemble the company →", to: "party" }],
   },
 };
@@ -2111,6 +2236,6 @@ export {
   clamp, roll, startBuyPrice, SANDPOINT, ZONE_COST, DRIVER_FEE, DRIVER_WAGE,
   INTRO, INTRO_START, PACES, SKILL_LABEL, dfmt,
   VALUABLES, RELICS, ITEMS, relicFx, sellValuables,
-  marketRumor, repFx, INJURIES,
+  marketRumor, repFx, INJURIES, DISEASES, diseaseTick, maybeBreakdown, mendInjuries,
   activeMovesFor, grantXP, MOVE_PROGRESSION, XP_THRESH, MAX_LEVEL,
 };

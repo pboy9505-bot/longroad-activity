@@ -179,7 +179,7 @@ function OutfitScreen({ s, dispatch }) {
   const offered = Object.keys(GOODS).filter((g) => SANDPOINT.offers && SANDPOINT.offers[g] != null);
   return (
     <div>
-      <Heading sub={`A purse of ${s.START_GOLD} gp against fourteen hundred miles. Sandpoint sells cloth, glass, iron, and reagents cheap — but furs and whale-oil for the ice you must buy later, in the north.`}>Outfit at Sandpoint</Heading>
+      <Heading sub={`A purse of ${s.START_GOLD} gp against fourteen hundred miles. Sandpoint sells cloth, glass, iron, and reagents cheap, but furs and whale-oil for the ice you must buy later, in the north.`}>Outfit at Sandpoint</Heading>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Section title="Draft team">
           {Object.entries(ANIMALS).map(([k, a]) => (
@@ -330,7 +330,7 @@ function CommandMenu({ b, dispatch }) {
       </div>
       <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
         <button className="btn seal" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_OPEN_BAG" })} title="Use a draught, flask, or rare find from the satchel.">Item</button>
-        <button className="btn" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_STRIKE" })} title="A basic weapon attack — always available, never runs out. Your reliable option when spells, ki, or rage are spent.">Strike</button>
+        <button className="btn" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_STRIKE" })} title="A basic weapon attack, always available, never runs out. Your reliable option when spells, ki, or rage are spent.">Strike</button>
         <button className="btn" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_FLEE" })} title="Try to break contact and escape the fight. Harder against more foes; fleeing a story boss loses the run.">Flee</button>
       </div>
       <div className="sc" style={{ fontSize: 10, color: SEPIA, marginTop: 8, fontStyle: "italic" }}>Hover a move for what it does. Draughts and flasks are drawn from the caravan's stores.</div>
@@ -393,7 +393,7 @@ function RoleBoard({ s, dispatch }) {
           <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", opacity: down ? 0.45 : 1, borderBottom: "1px dotted rgba(74,58,36,.2)" }}>
             <div style={{ width: 92 }}>
               <div className="disp" style={{ fontSize: 13 }}>{M.name}</div>
-              <div className="sc" style={{ fontSize: 10, color: p.injury ? WAX : SEPIA }}>{down ? "down" : p.injury ? `hurt: ${p.injury}` : M.cls}</div>
+              <div className="sc" style={{ fontSize: 10, color: p.injury || p.disease ? WAX : SEPIA }}>{down ? "down" : p.disease ? `ill: ${p.disease}` : p.injury ? `hurt: ${p.injury}` : M.cls}</div>
             </div>
             <div style={{ flex: 1 }}>
               <select className="btn" disabled={down} value={s.roles[p.id] || "drive"} onChange={(e) => dispatch({ type: "SET_ROLE", id: p.id, role: e.target.value })}
@@ -425,7 +425,7 @@ function TradePanel({ s, dispatch }) {
       <button className="btn" disabled={s.rumorDone} onClick={() => dispatch({ type: "RUMOR" })} style={{ marginBottom: 8, marginLeft: 6 }} title="Work the market talk (Perception/Diplomacy) to learn what the region ahead pays well for.">{s.rumorDone ? "Asked around ✓" : "Ask around the market"}</button>
       {s.rumor && s.rumor.goods && s.rumor.goods.length > 0 && (
         <div className="sc" style={{ fontSize: 11, color: MOSS, marginBottom: 8, padding: "4px 6px", border: "1px dotted rgba(95,106,52,.5)" }}>
-          Rumor — {ZONES[s.rumor.zone].label} pays dear for: {s.rumor.goods.map((g) => GOODS[g].label).join(", ")}.
+          Rumor, {ZONES[s.rumor.zone].label} pays dear for: {s.rumor.goods.map((g) => GOODS[g].label).join(", ")}.
         </div>
       )}
       {(() => {
@@ -494,7 +494,7 @@ function StoryBeatView({ s, dispatch }) {
           </button>
         );
       })}
-      <div className="sc" style={{ fontSize: 10.5, color: SEPIA, marginTop: 6, fontStyle: "italic" }}>However you go in, a guardian waits beyond. This is do or die — there is no retreat from what comes next.</div>
+      <div className="sc" style={{ fontSize: 10.5, color: SEPIA, marginTop: 6, fontStyle: "italic" }}>However you go in, a guardian waits beyond. This is do or die, there is no retreat from what comes next.</div>
     </div>
   );
 }
@@ -548,7 +548,7 @@ function FerryView({ s, dispatch }) {
   const fee = ice ? 55 : 25;
   return (
     <ChoiceView title={`Crossing: ${s.ferry.name}`}
-      body={ice ? `Ovorikheer and its like are no place to guess your way. An Aganhei guide will lead the caravan through the ice safe for ${fee} gp — or your own best hand can try to read the ice and save the coin.` : `The ${s.ferry.name} runs high and dark. A ferryman waits with his flat barge (${fee} gp), or you can chance the ford and keep your coin.`}
+      body={ice ? `Ovorikheer and its like are no place to guess your way. An Aganhei guide will lead the caravan through the ice safe for ${fee} gp, or your own best hand can try to read the ice and save the coin.` : `The ${s.ferry.name} runs high and dark. A ferryman waits with his flat barge (${fee} gp), or you can chance the ford and keep your coin.`}
       options={[{ id: "ferry", label: ice ? `Hire an Aganhei guide (${fee} gp)` : `Take the ferry (${fee} gp)`, tag: "safe" }, { id: "ford", label: ice ? "Navigate the ice yourselves (Survival)" : "Ford it and save the coin", tag: "fast", note: "risk to wagon, team, and party" }]}
       onPick={(id) => dispatch({ type: "FERRY", mode: id })} accent={WAX} />
   );
@@ -564,7 +564,7 @@ function RoadScreen({ s, dispatch }) {
   const risk = combatChanceFor(s); // hidden from the player; drives only the mood line
   const danger = s.legDanger[s.legIndex] || 1;
   const threat = node.town || node.type === "city"
-    ? "You are within a settlement's walls. Rest easy here — resupply, sell, and see to the wagons."
+    ? "You are within a settlement's walls. Rest easy here, resupply, sell, and see to the wagons."
     : s.scouted
       ? (risk >= 0.28 ? "Your scout comes back grim: fresh sign of trouble, and plenty of it. Ride ready." : risk >= 0.16 ? "Your scout reads old tracks and open country. Stay watchful." : "Your scout finds the way ahead clear enough. Easy going, for now.")
       : (danger >= 3 || zone.cold >= 1 ? "This is hard, lonely country. Anything could be waiting past the next rise." : danger >= 2 ? "The road runs quiet, but you have felt eyes on you before out here." : "The road runs easy under open sky.");
@@ -633,7 +633,7 @@ function RoadScreen({ s, dispatch }) {
             <Section title="Company">
               {s.party.map((p) => { const M = BY_ID[p.id]; return (
                 <div key={p.id} style={{ marginBottom: 6 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 13 }}>{M.name} <span className="sc" style={{ fontSize: 10, color: p.injury ? WAX : SEPIA }}>{p.injury ? p.injury : M.cls}</span></span><span className="disp" style={{ fontSize: 12, color: p.hp <= 0 ? WAX : INK }}>{p.hp}/{p.maxHp}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 13 }}>{M.name} <span className="sc" style={{ fontSize: 10, color: p.injury || p.disease ? WAX : SEPIA }}>{p.disease ? p.disease : p.injury ? p.injury : M.cls}</span></span><span className="disp" style={{ fontSize: 12, color: p.hp <= 0 ? WAX : INK }}>{p.hp}/{p.maxHp}</span></div>
                   <Bar v={p.hp} max={p.maxHp} tint={WAX} low={0} />
                 </div>
               ); })}
@@ -695,7 +695,7 @@ function EndScreen({ s, dispatch }) {
           <div className="sc" style={{ fontSize: 12, color: SEPIA }}>Ameiko Kaijitsu crowned Empress of Minkai on day {s.ledger.day} of the journey.</div>
           {s.ledger.boons && s.ledger.boons.length > 0
             ? <div style={{ fontSize: 13, marginTop: 6, color: MOSS }}>You came to the throne with {s.ledger.boons.join("; ")}.</div>
-            : <div style={{ fontSize: 13, marginTop: 6, color: SEPIA }}>You came to the throne with nothing but grit and steel — and it was, barely, enough.</div>}
+            : <div style={{ fontSize: 13, marginTop: 6, color: SEPIA }}>You came to the throne with nothing but grit and steel, and it was, barely, enough.</div>}
           <div className="disp" style={{ fontSize: 18, color: GILT, marginTop: 8 }}>Final purse: {s.ledger.gold} gp{s.ledger.cargoVal > 0 ? <span className="sc" style={{ fontSize: 12, color: SEPIA }}> · {s.ledger.cargoVal} gp still in the wagons</span> : null}</div>
           <div className="sc" style={{ fontSize: 12, color: MOSS }}>Earned trading the length of the world: {s.earned} gp.</div>
         </div>
@@ -802,7 +802,7 @@ function TitleScreen({ dispatch }) {
         <div style={{ maxWidth: 648, margin: "4px auto", textAlign: "left" }}>
           <p style={{ fontSize: 15.5, lineHeight: 1.62, color: INK2, marginBottom: 10 }}>
             <span className="disp" style={{ float: "left", fontSize: 54, lineHeight: 0.78, paddingRight: 10, paddingTop: 5, color: WAX }}>A</span>
-            throne on the far side of the world belongs to the innkeeper of Sandpoint, and the only way to it runs east — up through the Land of the Linnorm Kings, over the polar ice of the Crown of the World, and down into the Dragon Empires of Tian Xia. Fill your wagons, for every mile east makes the cargo worth more; the trade is what buys your passage through the cold. But the road has three guardians on it, and each one must be broken before Ameiko Kaijitsu can take back Minkai.
+            throne on the far side of the world belongs to the innkeeper of Sandpoint, and the only way to it runs east, up through the Land of the Linnorm Kings, over the polar ice of the Crown of the World, and down into the Dragon Empires of Tian Xia. Fill your wagons, for every mile east makes the cargo worth more; the trade is what buys your passage through the cold. But the road has three guardians on it, and each one must be broken before Ameiko Kaijitsu can take back Minkai.
           </p>
           <p style={{ fontSize: 15.5, lineHeight: 1.62, color: INK2 }}>
             Gather a company of four. Outfit your wagons. Read the weather, ration the feed, buy low and sell high, and settle what the road throws at you with word, coin, or steel. Cross the Crown, best the Hungry Storm and the oni that wait beyond, and set the heir on the Jade Throne.
