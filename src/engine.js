@@ -316,6 +316,29 @@ const MOVES = {
   // -- Sorcerer (fire in the blood) --
   bloodfireBolt: { name: "Bloodfire Bolt", kind: "touch", target: "enemy", dmg: [1, 6, 2], desc: "A bloodline cantrip; a lash of flame, always ready." },
   mirrorImage: { name: "Mirror Image", kind: "buff", target: "self", status: { k: "blurred", dur: 3, soak: 0.5 }, desc: "Flickering duplicates; blows often strike an image, not you." },
+  // -- Advanced moves, unlocked as the company grows seasoned (levels 6-7) --
+  huntersMark: { name: "Hunter's Mark", kind: "attack", target: "enemy", atkBonus: 2, dmg: [2, 8, 4], rider: { k: "crippled", dur: 2, atk: -2 }, desc: "A marked, punishing shot; the foe fights worse for it." },
+  deadeye: { name: "Deadeye Shot", kind: "attack", target: "enemy", atkBonus: 3, dmg: [2, 8, 6], desc: "A killing arrow, placed with terrible precision." },
+  healingWord: { name: "Healing Word", kind: "heal", target: "ally", heal: [3, 8, 8], cost: { spells2: 1 }, desc: "A greater mending that closes even grave wounds." },
+  flamestrike: { name: "Flame Strike", kind: "save", target: "allEnemies", dmg: [4, 6, 0], save: "ref", dc: 15, half: true, cost: { spells2: 1 }, desc: "A column of holy fire across the enemy line. Reflex halves." },
+  viciousStrike: { name: "Vicious Strike", kind: "attack", target: "enemy", dmg: [1, 6, 4], sneak: [4, 6, 2], desc: "A murderous blow — ruinous against an off-guard foe." },
+  bleedingStrike: { name: "Hamstring", kind: "attack", target: "enemy", dmg: [2, 6, 3], rider: { k: "bleeding", dur: 3, dot: 4 }, desc: "A deep cut that bleeds the foe through the whole fight." },
+  forceLance: { name: "Force Lance", kind: "auto", target: "enemy", dmg: [4, 4, 4], cost: { spells2: 1 }, desc: "A honed spear of pure force. Never misses, and it hurts." },
+  greaterFireball: { name: "Greater Fireball", kind: "save", target: "allEnemies", dmg: [7, 6, 0], save: "ref", dc: 17, half: true, cost: { spells3: 1 }, desc: "A roaring blast that engulfs every foe. Reflex halves." },
+  mightyBlow: { name: "Mighty Blow", kind: "attack", target: "enemy", penalty: 2, dmg: [2, 10, 8], desc: "A tremendous overhand swing. Less sure, devastating when it lands." },
+  whirlwind: { name: "Whirlwind", kind: "attack", target: "enemy", dmg: [1, 10, 4], extraTargets: 2, desc: "A spinning cut that carries into two more foes." },
+  greaterRage: { name: "Greater Rage", kind: "rage", target: "self", status: { k: "raging", dur: 5, atk: 3, dmg: 6, ac: -2 }, tempHp: 18, cost: { rage: 1 }, desc: "A deeper fury: harder hits, tougher hide still." },
+  brutalCharge: { name: "Brutal Charge", kind: "attack", target: "enemy", dmg: [2, 12, 6], selfRider: { k: "exposed", dur: 1, ac: -2 }, desc: "A thunderous running blow that leaves you wide open." },
+  strikingChord: { name: "Striking Chord", kind: "touch", target: "enemy", dmg: [3, 6, 2], cost: { spells2: 1 }, desc: "A blast of sound that rattles bone and armour alike." },
+  inspireHeroics: { name: "Inspire Heroics", kind: "buff", target: "allAllies", status: { k: "inspired", dur: 5, atk: 3, dmg: 3 }, cost: { performance: 1 }, desc: "A soaring anthem; the whole party fights like heroes." },
+  flameBlade: { name: "Flame Blade", kind: "attack", target: "enemy", dmg: [2, 8, 4], cost: { spells2: 1 }, desc: "A scimitar of fire conjured to the hand." },
+  stormburst: { name: "Storm Burst", kind: "save", target: "allEnemies", dmg: [5, 6, 0], save: "ref", dc: 16, half: true, cost: { spells3: 1 }, desc: "The sky splits over the whole enemy line. Reflex halves." },
+  risingFlurry: { name: "Rising Flurry", kind: "attack", target: "enemy", penalty: 1, extraHits: 2, dmg: [1, 8, 3], desc: "A blinding rain of three strikes, each a shade less sure." },
+  quiveringPalm: { name: "Quivering Palm", kind: "attack", target: "enemy", dmg: [3, 6, 4], rider: { k: "stunned", dur: 2, skip: true, chance: 0.5 }, cost: { ki: 1 }, desc: "A killing touch that can stop a foe cold." },
+  greaterLay: { name: "Greater Lay on Hands", kind: "heal", target: "ally", heal: [3, 6, 7], cost: { layOnHands: 1 }, desc: "A greater healing touch; wounds knit under her palm." },
+  radiantSmite: { name: "Radiant Smite", kind: "attack", target: "enemy", atkBonus: 3, dmg: [2, 10, 10], cost: { smite: 1 }, desc: "A vow blazing into steel; a devastating, sure blow." },
+  empoweredBolt: { name: "Empowered Bolt", kind: "touch", target: "enemy", dmg: [3, 6, 3], desc: "The bloodline burns hotter now — a heavier lash of flame, always ready." },
+  infernoBlast: { name: "Inferno Blast", kind: "save", target: "allEnemies", dmg: [7, 6, 0], save: "ref", dc: 17, half: true, cost: { spells3: 1 }, desc: "The blood ignites; fire consumes every foe. Reflex halves." },
   // -- foes --
   foeSlash: { name: "Slash", kind: "attack", target: "enemy", dmg: [1, 8, 4] },
   foeShoot: { name: "Shortbow", kind: "attack", target: "enemy", dmg: [1, 8, 3] },
@@ -345,7 +368,49 @@ const MOVES = {
   foeInvoke: { name: "Invoke the Storm", kind: "buff", target: "allAllies", status: { k: "stormblessed", dur: 3, atk: 2, dmg: 3 } },
 };
 
-/* =============================== ENEMIES =========================== */
+/* =============================== LEVELING ========================= *
+ * The company shares experience from the fights it wins and grows more
+ * seasoned over the long road: level 5 at the outset, up to level 7 by the
+ * end of a hard journey. Each level unlocks one advanced move per class that
+ * REPLACES that class's weakest one — options change, not just numbers — plus
+ * a small bump in staying power. */
+const MAX_LEVEL = 7;
+const XP_THRESH = { 6: 800, 7: 2300 }; // cumulative party XP needed for each level
+const MOVE_PROGRESSION = {
+  Ranger: [{ lvl: 6, learn: "huntersMark", replace: "cripplingShot" }, { lvl: 7, learn: "deadeye", replace: "rapidShot" }],
+  Cleric: [{ lvl: 6, learn: "healingWord", replace: "cureWounds" }, { lvl: 7, learn: "flamestrike", replace: "searingLight" }],
+  Rogue: [{ lvl: 6, learn: "viciousStrike", replace: "sneakAttack" }, { lvl: 7, learn: "bleedingStrike", replace: "alchemistFire" }],
+  Wizard: [{ lvl: 6, learn: "forceLance", replace: "magicMissile" }, { lvl: 7, learn: "greaterFireball", replace: "fireball" }],
+  Fighter: [{ lvl: 6, learn: "mightyBlow", replace: "powerAttack" }, { lvl: 7, learn: "whirlwind", replace: "cleave" }],
+  Barbarian: [{ lvl: 6, learn: "greaterRage", replace: "rage" }, { lvl: 7, learn: "brutalCharge", replace: "charge" }],
+  Bard: [{ lvl: 6, learn: "strikingChord", replace: "discordantNote" }, { lvl: 7, learn: "inspireHeroics", replace: "inspireCourage" }],
+  Druid: [{ lvl: 6, learn: "flameBlade", replace: "thornLash" }, { lvl: 7, learn: "stormburst", replace: "callLightning" }],
+  Monk: [{ lvl: 6, learn: "risingFlurry", replace: "flurry" }, { lvl: 7, learn: "quiveringPalm", replace: "elementalFist" }],
+  Paladin: [{ lvl: 6, learn: "greaterLay", replace: "layOnHands" }, { lvl: 7, learn: "radiantSmite", replace: "smiteEvil" }],
+  Sorcerer: [{ lvl: 6, learn: "empoweredBolt", replace: "bloodfireBolt" }, { lvl: 7, learn: "infernoBlast", replace: "fireball" }],
+};
+/* A class's actual battle kit at a given party level (base moves with unlocks swapped in). */
+function activeMovesFor(id, level) {
+  const M = BY_ID[id];
+  const moves = [...M.combat.moves];
+  for (const step of MOVE_PROGRESSION[M.cls] || []) {
+    if ((level || 5) >= step.lvl) { const i = moves.indexOf(step.replace); if (i >= 0) moves[i] = step.learn; else if (!moves.includes(step.learn)) moves.push(step.learn); }
+  }
+  return moves;
+}
+/* Award party XP and promote through level thresholds, announcing what's learned. */
+function grantXP(st, amount) {
+  if (!amount) return;
+  st.xp = (st.xp || 0) + amount;
+  let lvl = st.level || 5;
+  while (lvl < MAX_LEVEL && st.xp >= (XP_THRESH[lvl + 1] || Infinity)) {
+    lvl += 1;
+    st.party = st.party.map((p) => ({ ...p, maxHpBase: (p.maxHpBase || p.maxHp) + 4, maxHp: p.maxHp + 4, hp: p.hp > 0 ? p.hp + 4 : p.hp }));
+    const learned = st.party.map((p) => { const step = (MOVE_PROGRESSION[BY_ID[p.id].cls] || []).find((s) => s.lvl === lvl); return step ? `${BY_ID[p.id].name} learns ${MOVES[step.learn].name}` : null; }).filter(Boolean);
+    pushLog(st, `The company grows more seasoned — you reach level ${lvl}. ${learned.join("; ")}.`, "arrive");
+  }
+  st.level = lvl;
+}
 /* Tuned for a level-5 party of four, escalating gently by zone. The three
    bosses are the fixed story pillars and hit far harder than the road rabble. */
 const ENEMIES = {
@@ -428,8 +493,8 @@ function combatChanceFor(st) {
   if (!node || node.town || node.type === "city") return 0;
   const danger = st.legDanger[st.legIndex] || 1;
   const z = ZONES[node.zone] || ZONES.varisia;
-  const zoneRisk = z.cold >= 1 ? 0.08 : z.cold > 0 ? 0.05 : 0.02;
-  return clamp((0.15 + danger * 0.05 + zoneRisk + seasonStage(st.day).sev * 0.06) * repFx(st).combatMul, 0, 0.52);
+  const zoneRisk = z.cold >= 1 ? 0.10 : z.cold > 0 ? 0.06 : 0.03;
+  return clamp((0.18 + danger * 0.055 + zoneRisk + seasonStage(st.day).sev * 0.06) * repFx(st).combatMul, 0, 0.58);
 }
 function regionTable(st) { const node = ROUTE[st.legIndex]; return REGION_COMBAT[node.name] || WILD_BY_ZONE[node.zone] || WILD_BY_ZONE.varisia; }
 
@@ -739,6 +804,7 @@ function startJourney(s) {
     flags: { brinewall: null, highice: null, kasai: null, suishen: false }, stormSeen: false,
     valuables: {}, relics: [], items: {},
     reputation: 0, marks: {}, rumor: null, rumorDone: false,
+    xp: 0, level: 5,
     drift: {},
     log: [{ t: `You roll out of Sandpoint with ${teamSize(lo.wagons)} ${ANIMALS[lo.animal].label.toLowerCase()}, ${lo.wagons} wagon${lo.wagons > 1 ? "s" : ""}, and Ameiko Kaijitsu's fate riding with you. Minkai lies fourteen hundred miles east, across the roof of the world. See her home.`, k: "start", day: 1 }],
     pending: null, ferry: null, event: null, beat: null, battle: null, lastCheck: null,
@@ -1790,7 +1856,7 @@ function moveUsable(actor, mv) { if (!mv) return false; if (mv.cost) for (const 
 
 function buildRoadBattle(st, encKey, mod = null, story = null) {
   const enc = ENCOUNTERS[encKey];
-  const party = st.party.map((p) => { const M = BY_ID[p.id]; const C = M.combat; return { uid: "p_" + p.id, id: p.id, name: M.name, cls: M.cls, side: "party", isPlayer: true, hp: p.hp, maxHp: p.maxHp, tempHp: 0, ac: C.ac, touch: C.touch, atk: C.atk, init: C.init, saves: { ...C.saves }, res: { ...p.res }, moves: C.moves, statuses: [] }; });
+  const party = st.party.map((p) => { const M = BY_ID[p.id]; const C = M.combat; return { uid: "p_" + p.id, id: p.id, name: M.name, cls: M.cls, side: "party", isPlayer: true, hp: p.hp, maxHp: p.maxHp, tempHp: 0, ac: C.ac, touch: C.touch, atk: C.atk, init: C.init, saves: { ...C.saves }, res: { ...p.res }, moves: activeMovesFor(p.id, st.level), statuses: [] }; });
   let n = 0; const foes = [];
   for (const [type, count] of enc.foes) for (let i = 0; i < count; i++) { const E = ENEMIES[type]; n++; foes.push({ uid: "f_" + n, id: type, name: E.name + (count > 1 ? " " + (i + 1) : ""), side: "foe", isPlayer: false, hp: E.hp, maxHp: E.hp, tempHp: 0, ac: E.ac, touch: E.touch, atk: E.atk + (mod && !E.boss ? 0 : 0), init: E.init, saves: { ...E.saves }, res: {}, moves: E.moves, boss: E.boss, statuses: [] }); }
   /* Story modifiers from how the party met the beat: a blessing, a head start,
@@ -1896,6 +1962,7 @@ function finishBattle(state) {
     if (enc.loot) for (const [k, v] of Object.entries(enc.loot)) { if (road.res[k] !== undefined && v > 0) { road.res[k] += v; lootTxt += `, +${v} ${k}`; } }
     pushLog(road, `${b.story ? "The guardian falls" : "The foe is broken"}. You take ${enc.gold} gp from the field${lootTxt}.`, "good");
     const dr = rollDrops(road, b, enc);
+    grantXP(road, enc.gold);
     if (dr.valuables.length || dr.item || dr.relic) {
       const parts = [];
       if (dr.valuables.length) parts.push("you gather " + listJoin(dr.valuables.map((id) => VALUABLES[id].name)));
@@ -2045,4 +2112,5 @@ export {
   INTRO, INTRO_START, PACES, SKILL_LABEL, dfmt,
   VALUABLES, RELICS, ITEMS, relicFx, sellValuables,
   marketRumor, repFx, INJURIES,
+  activeMovesFor, grantXP, MOVE_PROGRESSION, XP_THRESH, MAX_LEVEL,
 };

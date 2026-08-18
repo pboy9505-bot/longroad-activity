@@ -7,7 +7,7 @@ import {
   combatChanceFor, regionTable, resolveBeat, winGame, sellPrice, buyPrice,
   ZONES, ROUTE, ROSTER, BY_ID, EVENTS, BEATS, BRANCHES, GOODS, ANIMALS, WAGONS, ROLES, ROLE_ORDER,
   MOVES, ENEMIES, ENCOUNTERS, REGION_COMBAT, WILD_BY_ZONE, COMBAT_ITEMS, STRAND_DAY,
-  VALUABLES, RELICS, ITEMS, relicFx, repFx,
+  VALUABLES, RELICS, ITEMS, relicFx, repFx, XP_THRESH, MAX_LEVEL,
   clamp, roll, startBuyPrice, SANDPOINT, ZONE_COST, DRIVER_FEE, DRIVER_WAGE, INTRO, INTRO_START, PACES, SKILL_LABEL, dfmt,
 } from "./engine.js";
 
@@ -582,6 +582,11 @@ function RoadScreen({ s, dispatch }) {
             ? <span>On the ice · <b className="disp" style={{ color: fuel > 0 ? FROST : WAX }}>{fuel}</b> oil · <b className="disp" style={{ color: furs > 0 ? MOSS : WAX }}>{furs}</b> furs<br /></span>
             : <span>{stg.label}<br /></span>}
           Purse <b className="disp" style={{ color: GILT }}>{s.res.gold} gp</b>{s.earned > 0 ? ` · earned ${s.earned}` : ""}
+          {(() => {
+            const lvl = s.level || 5;
+            const next = XP_THRESH[lvl + 1];
+            return <div className="sc" style={{ fontSize: 10.5, color: INDIGO, marginTop: 1 }}>Company · Level {lvl}{lvl < MAX_LEVEL && next ? ` · ${Math.min(s.xp || 0, next)}/${next} to next` : " · fully seasoned"}</div>;
+          })()}
         </div>
       </div>
       <div className="sc" style={{ fontSize: 11, color: risk > 0 ? WAX : MOSS, marginBottom: 10, borderTop: "1px dotted rgba(74,58,36,.3)", borderBottom: "1px dotted rgba(74,58,36,.3)", padding: "4px 0" }}>{threat}</div>
