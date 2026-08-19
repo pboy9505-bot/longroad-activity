@@ -7,7 +7,7 @@ import {
   combatChanceFor, regionTable, resolveBeat, winGame, sellPrice, buyPrice,
   ZONES, ROUTE, ROSTER, BY_ID, EVENTS, BEATS, BRANCHES, GOODS, ANIMALS, WAGONS, ROLES, ROLE_ORDER,
   MOVES, ENEMIES, ENCOUNTERS, REGION_COMBAT, WILD_BY_ZONE, COMBAT_ITEMS, STRAND_DAY,
-  VALUABLES, RELICS, ITEMS, relicFx, repFx, XP_THRESH, MAX_LEVEL,
+  VALUABLES, RELICS, ITEMS, relicFx, repFx, RAISE_FEE, RECRUIT_FEE,
   clamp, roll, startBuyPrice, SANDPOINT, ZONE_COST, DRIVER_FEE, DRIVER_WAGE, INTRO, INTRO_START, PACES, SKILL_LABEL, dfmt,
 } from "./engine.js";
 
@@ -173,13 +173,13 @@ function Stepper({ label, note, value, unit, onDec, onInc, decOff, incOff }) {
 function OutfitScreen({ s, dispatch }) {
   const lo = s.loadout; const spent = loadoutCost(lo); const left = s.START_GOLD - spent;
   const cap = WAGONS[lo.wagons].cap; const used = cargoUsed(lo);
-  const ORDU = ROUTE.find((n) => n.name === "Ordu-Aganhei");
+  const ORDU = ROUTE.find((n) => n.name === "Eastgate");
   const eastPrice = (g) => Math.round(GOODS[g].base * ((ORDU.market && ORDU.market[g]) || 0.8));
   const projected = Object.entries(lo.cargo).reduce((t, [g, q]) => t + q * eastPrice(g), 0);
   const offered = Object.keys(GOODS).filter((g) => SANDPOINT.offers && SANDPOINT.offers[g] != null);
   return (
     <div>
-      <Heading sub={`A purse of ${s.START_GOLD} gp against fourteen hundred miles. Sandpoint sells cloth, glass, iron, and reagents cheap, but furs and whale-oil for the ice you must buy later, in the north.`}>Outfit at Sandpoint</Heading>
+      <Heading sub={`A purse of ${s.START_GOLD} gp against fourteen hundred miles. Tidewatch sells cloth, glass, iron, and reagents cheap, but furs and whale-oil for the ice you must buy later, in the north.`}>Outfit at Tidewatch</Heading>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Section title="Draft team">
           {Object.entries(ANIMALS).map(([k, a]) => (
@@ -211,7 +211,7 @@ function OutfitScreen({ s, dispatch }) {
           <Stepper key={k} label={label} note={note} value={lo[k]} unit="" onDec={() => dispatch({ type: "SET_SUPPLY", k, d: -2 })} onInc={() => dispatch({ type: "SET_SUPPLY", k, d: 2 })} decOff={lo[k] <= 0} />
         ))}
       </Section>
-      <Section title="Trade goods (Sandpoint prices)" right={<span className="sc" style={{ fontSize: 11, color: used > cap ? WAX : SEPIA }}>hold {used} / {cap}</span>}>
+      <Section title="Trade goods (Tidewatch prices)" right={<span className="sc" style={{ fontSize: 11, color: used > cap ? WAX : SEPIA }}>hold {used} / {cap}</span>}>
         {offered.map((g) => { const gd = GOODS[g]; const bp = startBuyPrice(g); return (
           <div key={g} style={{ borderBottom: "1px dotted rgba(74,58,36,.25)", padding: "4px 0" }}>
             <Stepper label={gd.label} note={`buy ${bp} gp · Ordu ~${eastPrice(g)} gp · bulk ${gd.bulk}`} value={lo.cargo[g] || 0} unit=""
@@ -219,7 +219,7 @@ function OutfitScreen({ s, dispatch }) {
             <div className="sc" style={{ fontSize: 10.5, color: SEPIA, marginTop: -2 }}>{gd.note}</div>
           </div>
         ); })}
-        {projected > 0 && <div className="sc" style={{ fontSize: 11, color: MOSS, marginTop: 6 }}>Projected value at Ordu-Aganhei: ~{projected} gp (before the market shifts under you).</div>}
+        {projected > 0 && <div className="sc" style={{ fontSize: 11, color: MOSS, marginTop: 6 }}>Projected value at Eastgate: ~{projected} gp (before the market shifts under you).</div>}
       </Section>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6, position: "sticky", bottom: 0, background: "rgba(232,220,191,.9)", padding: "8px 0" }}>
         <button className="btn" onClick={() => dispatch({ type: "BACK_PARTY" })}>← Party</button>
@@ -393,7 +393,7 @@ function RoleBoard({ s, dispatch }) {
           <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", opacity: down ? 0.45 : 1, borderBottom: "1px dotted rgba(74,58,36,.2)" }}>
             <div style={{ width: 92 }}>
               <div className="disp" style={{ fontSize: 13 }}>{M.name}</div>
-              <div className="sc" style={{ fontSize: 10, color: p.injury || p.disease ? WAX : SEPIA }}>{down ? "down" : p.disease ? `ill: ${p.disease}` : p.injury ? `hurt: ${p.injury}` : M.cls}</div>
+              <div className="sc" style={{ fontSize: 10, color: p.dead ? WAX : p.injury || p.disease ? WAX : SEPIA }}>{p.dead ? "fallen" : p.disease ? `ill: ${p.disease}` : p.injury ? `hurt: ${p.injury}` : M.cls}</div>
             </div>
             <div style={{ flex: 1 }}>
               <select className="btn" disabled={down} value={s.roles[p.id] || "drive"} onChange={(e) => dispatch({ type: "SET_ROLE", id: p.id, role: e.target.value })}
@@ -418,7 +418,41 @@ function TradePanel({ s, dispatch }) {
   const zoneMul = ZONE_COST[node.zone] || 1;
   return (
     <Section title={`Market at ${node.name}`} right={<span className="sc" style={{ fontSize: 10.5, color: SEPIA }}>hold {used}/{cap}</span>}>
-      <button className="btn" onClick={() => dispatch({ type: "RESUPPLY" })} style={{ marginBottom: 8 }}>Resupply provisions{zoneMul >= 2 ? " (dear, this far north)" : ""}</button>
+      {(() => {
+        const dead = (s.party || []).filter((p) => p.dead);
+        if (!dead.length) return null;
+        const isCity = node.type === "city";
+        const activeIds = s.party.filter((p) => !p.dead).map((p) => p.id);
+        const recruitable = ROSTER.filter((m) => !activeIds.includes(m.id) && !dead.some((d) => d.id === m.id));
+        return (
+          <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid rgba(124,42,28,.4)" }}>
+            <div className="disp" style={{ fontSize: 12.5, color: WAX, marginBottom: 4, letterSpacing: ".04em" }}>Your losses</div>
+            <div className="sc" style={{ fontSize: 10.5, color: SEPIA, marginBottom: 6 }}>The fallen do not return on their own. Raise them at a great city's temple, or take on a new hand of a class you now lack.</div>
+            {dead.map((p) => (
+              <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                <span className="sc" style={{ fontSize: 11.5, color: INK2 }}>{BY_ID[p.id].name}, {BY_ID[p.id].cls}, has fallen.</span>
+                <button className="btn" disabled={!isCity || s.res.gold < RAISE_FEE} onClick={() => dispatch({ type: "RAISE", id: p.id })}
+                  title={isCity ? `Pay the temple to raise ${BY_ID[p.id].name}.` : "Only a great city's temple can raise the dead."}>
+                  {isCity ? `Raise (${RAISE_FEE} gp)` : "Raise (needs a city)"}
+                </button>
+              </div>
+            ))}
+            {recruitable.length > 0 && (
+              <div style={{ marginTop: 6 }}>
+                <div className="sc" style={{ fontSize: 11, color: MOSS, marginBottom: 3 }}>Take on a new hand ({RECRUIT_FEE} gp):</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {recruitable.map((m) => (
+                    <button key={m.id} className="btn" disabled={s.res.gold < RECRUIT_FEE} onClick={() => dispatch({ type: "RECRUIT", newId: m.id })}
+                      title={`${m.name}, ${m.cls}. ${m.tag || ""}`} style={{ fontSize: 11, padding: "4px 7px" }}>{m.cls}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+      <button className="btn" onClick={() => dispatch({ type: "RESUPPLY" })} style={{ marginBottom: 8 }} title="Buy provisions up to full. Does not heal anyone.">Resupply provisions{zoneMul >= 2 ? " (dear, this far north)" : ""}</button>
+      <button className="btn" onClick={() => dispatch({ type: "REST_TOWN" })} style={{ marginBottom: 8, marginLeft: 6 }} title="Spend a full day under a roof. Heals the living, sets injuries, and shakes off sickness. Costs a day and the day's provisions.">Rest and mend (1 day)</button>
       {s.hiredDriver
         ? <button className="btn" onClick={() => dispatch({ type: "DRIVER", hire: false })} style={{ marginBottom: 8, marginLeft: 6 }}>Pay off the teamster</button>
         : <button className="btn" disabled={s.res.gold < DRIVER_FEE} onClick={() => dispatch({ type: "DRIVER", hire: true })} style={{ marginBottom: 8, marginLeft: 6 }}>Hire a teamster ({DRIVER_FEE} gp)</button>}
@@ -463,7 +497,7 @@ function TradePanel({ s, dispatch }) {
           </div>
         ); })}
       </> : null}
-      {(node.zone === "linnorm") && <div className="sc" style={{ fontSize: 10, color: FROST, marginTop: 6 }}>Last chance to lay in furs and whale-oil before the ice. Both keep the cold from killing you, and both sell for a fortune in Tian Xia.</div>}
+      {(node.zone === "linnorm") && <div className="sc" style={{ fontSize: 10, color: FROST, marginTop: 6 }}>Last chance to lay in furs and whale-oil before the ice. Both keep the cold from killing you, and both sell for a fortune in the Jade East.</div>}
     </Section>
   );
 }
@@ -548,8 +582,8 @@ function FerryView({ s, dispatch }) {
   const fee = ice ? 55 : 25;
   return (
     <ChoiceView title={`Crossing: ${s.ferry.name}`}
-      body={ice ? `Ovorikheer and its like are no place to guess your way. An Aganhei guide will lead the caravan through the ice safe for ${fee} gp, or your own best hand can try to read the ice and save the coin.` : `The ${s.ferry.name} runs high and dark. A ferryman waits with his flat barge (${fee} gp), or you can chance the ford and keep your coin.`}
-      options={[{ id: "ferry", label: ice ? `Hire an Aganhei guide (${fee} gp)` : `Take the ferry (${fee} gp)`, tag: "safe" }, { id: "ford", label: ice ? "Navigate the ice yourselves (Survival)" : "Ford it and save the coin", tag: "fast", note: "risk to wagon, team, and party" }]}
+      body={ice ? `Ovorikheer and its like are no place to guess your way. An Frostroad guide will lead the caravan through the ice safe for ${fee} gp, or your own best hand can try to read the ice and save the coin.` : `The ${s.ferry.name} runs high and dark. A ferryman waits with his flat barge (${fee} gp), or you can chance the ford and keep your coin.`}
+      options={[{ id: "ferry", label: ice ? `Hire an Frostroad guide (${fee} gp)` : `Take the ferry (${fee} gp)`, tag: "safe" }, { id: "ford", label: ice ? "Navigate the ice yourselves (Survival)" : "Ford it and save the coin", tag: "fast", note: "risk to wagon, team, and party" }]}
       onPick={(id) => dispatch({ type: "FERRY", mode: id })} accent={WAX} />
   );
 }
@@ -575,18 +609,13 @@ function RoadScreen({ s, dispatch }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
         <div>
           <div className="disp" style={{ fontSize: 22, color: INK }}>Day {s.day} · {node.name}</div>
-          <div className="sc" style={{ fontSize: 12, color: cold > 0 ? FROST : SEPIA }}>{zone.label} · {s.weather.t}{coldTxt ? ` · ${coldTxt}` : ""} · {rem} mi to Minkai</div>
+          <div className="sc" style={{ fontSize: 12, color: cold > 0 ? FROST : SEPIA }}>{zone.label} · {s.weather.t}{coldTxt ? ` · ${coldTxt}` : ""} · {rem} mi to the Jade Empire</div>
         </div>
         <div className="sc" style={{ fontSize: 12, color: SEPIA, textAlign: "right" }}>
           {cold > 0
             ? <span>On the ice · <b className="disp" style={{ color: fuel > 0 ? FROST : WAX }}>{fuel}</b> oil · <b className="disp" style={{ color: furs > 0 ? MOSS : WAX }}>{furs}</b> furs<br /></span>
             : <span>{stg.label}<br /></span>}
           Purse <b className="disp" style={{ color: GILT }}>{s.res.gold} gp</b>{s.earned > 0 ? ` · earned ${s.earned}` : ""}
-          {(() => {
-            const lvl = s.level || 5;
-            const next = XP_THRESH[lvl + 1];
-            return <div className="sc" style={{ fontSize: 10.5, color: INDIGO, marginTop: 1 }}>Company · Level {lvl}{lvl < MAX_LEVEL && next ? ` · ${Math.min(s.xp || 0, next)}/${next} to next` : " · fully seasoned"}</div>;
-          })()}
         </div>
       </div>
       <div className="sc" style={{ fontSize: 11, color: risk > 0 ? WAX : MOSS, marginBottom: 10, borderTop: "1px dotted rgba(74,58,36,.3)", borderBottom: "1px dotted rgba(74,58,36,.3)", padding: "4px 0" }}>{threat}</div>
@@ -633,7 +662,7 @@ function RoadScreen({ s, dispatch }) {
             <Section title="Company">
               {s.party.map((p) => { const M = BY_ID[p.id]; return (
                 <div key={p.id} style={{ marginBottom: 6 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 13 }}>{M.name} <span className="sc" style={{ fontSize: 10, color: p.injury || p.disease ? WAX : SEPIA }}>{p.disease ? p.disease : p.injury ? p.injury : M.cls}</span></span><span className="disp" style={{ fontSize: 12, color: p.hp <= 0 ? WAX : INK }}>{p.hp}/{p.maxHp}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 13 }}>{M.name} <span className="sc" style={{ fontSize: 10, color: p.dead ? WAX : p.injury || p.disease ? WAX : SEPIA }}>{p.dead ? "fallen" : p.disease ? p.disease : p.injury ? p.injury : M.cls}</span></span><span className="disp" style={{ fontSize: 12, color: p.hp <= 0 ? WAX : INK }}>{p.hp}/{p.maxHp}</span></div>
                   <Bar v={p.hp} max={p.maxHp} tint={WAX} low={0} />
                 </div>
               ); })}
@@ -692,7 +721,7 @@ function EndScreen({ s, dispatch }) {
       {win && s.ledger && (
         <div className="card" style={{ padding: 14, maxWidth: 480, margin: "0 auto 14px", textAlign: "left" }}>
           <div className="disp" style={{ fontSize: 14, marginBottom: 6, textTransform: "uppercase", letterSpacing: ".08em" }}>The chronicle of the road</div>
-          <div className="sc" style={{ fontSize: 12, color: SEPIA }}>Ameiko Kaijitsu crowned Empress of Minkai on day {s.ledger.day} of the journey.</div>
+          <div className="sc" style={{ fontSize: 12, color: SEPIA }}>Akemi Ryoden crowned Empress of the Jade Empire on day {s.ledger.day} of the journey.</div>
           {s.ledger.boons && s.ledger.boons.length > 0
             ? <div style={{ fontSize: 13, marginTop: 6, color: MOSS }}>You came to the throne with {s.ledger.boons.join("; ")}.</div>
             : <div style={{ fontSize: 13, marginTop: 6, color: SEPIA }}>You came to the throne with nothing but grit and steel, and it was, barely, enough.</div>}
@@ -702,7 +731,7 @@ function EndScreen({ s, dispatch }) {
       )}
       <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
         <button className="btn seal on" onClick={() => dispatch({ type: "REPLAY" })}>Take the road again</button>
-        <button className="btn" onClick={() => dispatch({ type: "TO_TITLE" })}>Back to Sandpoint</button>
+        <button className="btn" onClick={() => dispatch({ type: "TO_TITLE" })}>Back to Tidewatch</button>
       </div>
     </div>
   );
@@ -772,7 +801,7 @@ function CompassRose({ size = 220 }) {
   );
 }
 function RouteMap() {
-  const stops = ["Sandpoint", "Brinewall", "Kalsgard", "The Crown", "Ordu-Aganhei", "Kasai"];
+  const stops = ["Tidewatch", "Brackmoor", "Kalsmark", "The Crown", "Eastgate", "the Jade Capital"];
   const W = 680, H = 118, pad = 46;
   const xs = stops.map((_, i) => pad + i * ((W - 2 * pad) / (stops.length - 1)));
   const ys = stops.map((_, i) => 66 + Math.sin(i * 1.05) * 20);
@@ -795,17 +824,17 @@ function TitleScreen({ dispatch }) {
     <div className="anim" style={{ animation: "fadeUp .6s ease", textAlign: "center", padding: "14px 8px 8px", position: "relative", overflow: "hidden" }}>
       <div aria-hidden style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", pointerEvents: "none" }}><CompassRose size={240} /></div>
       <div style={{ position: "relative" }}>
-        <div className="sc" style={{ fontSize: 12, letterSpacing: ".28em", color: SEPIA, textTransform: "uppercase" }}>Pathfinder · the road to Minkai</div>
+        <div className="sc" style={{ fontSize: 12, letterSpacing: ".28em", color: SEPIA, textTransform: "uppercase" }}>Pathfinder · the road to the Jade Empire</div>
         <div className="disp" style={{ fontSize: "clamp(40px,7vw,66px)", fontWeight: 700, color: INK, letterSpacing: ".04em", lineHeight: 1.02, margin: "6px 0 4px" }}>The Long Road</div>
-        <div className="sc" style={{ fontSize: 14, color: WAX, letterSpacing: ".06em" }}>Sandpoint to Kasai · fourteen hundred miles · carry the heir home</div>
+        <div className="sc" style={{ fontSize: 14, color: WAX, letterSpacing: ".06em" }}>Tidewatch to the Jade Capital · fourteen hundred miles · carry the heir home</div>
         <div style={{ display: "flex", justifyContent: "center", margin: "14px 0 4px" }}><WaxSeal /></div>
         <div style={{ maxWidth: 648, margin: "4px auto", textAlign: "left" }}>
           <p style={{ fontSize: 15.5, lineHeight: 1.62, color: INK2, marginBottom: 10 }}>
             <span className="disp" style={{ float: "left", fontSize: 54, lineHeight: 0.78, paddingRight: 10, paddingTop: 5, color: WAX }}>A</span>
-            throne on the far side of the world belongs to the innkeeper of Sandpoint, and the only way to it runs east, up through the Land of the Linnorm Kings, over the polar ice of the Crown of the World, and down into the Dragon Empires of Tian Xia. Fill your wagons, for every mile east makes the cargo worth more; the trade is what buys your passage through the cold. But the road has three guardians on it, and each one must be broken before Ameiko Kaijitsu can take back Minkai.
+            throne on the far side of the world belongs to the innkeeper of Tidewatch, and the only way to it runs east, up through the Land of the Wyrmkings, over the polar ice of the Roof of the World, and down into the Dragon Empires of the Jade East. Fill your wagons, for every mile east makes the cargo worth more; the trade is what buys your passage through the cold. But the road has three guardians on it, and each one must be broken before Akemi Ryoden can take back the Jade Empire.
           </p>
           <p style={{ fontSize: 15.5, lineHeight: 1.62, color: INK2 }}>
-            Gather a company of four. Outfit your wagons. Read the weather, ration the feed, buy low and sell high, and settle what the road throws at you with word, coin, or steel. Cross the Crown, best the Hungry Storm and the oni that wait beyond, and set the heir on the Jade Throne.
+            Gather a company of four. Outfit your wagons. Read the weather, ration the feed, buy low and sell high, and settle what the road throws at you with word, coin, or steel. Cross the Crown, best the Devouring Storm and the oni that wait beyond, and set the heir on the Jade Throne.
           </p>
         </div>
         <div style={{ margin: "12px auto 8px", display: "flex", justifyContent: "center" }}><RouteMap /></div>

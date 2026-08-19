@@ -48,45 +48,45 @@ function weightedPick(table) {
 /* =============================== TRAVEL DATA ======================== */
 
 /* --- The four trade zones of the long road. `cold` drives daily attrition
-   on the Crown of the World; `forage` scales what the land will give you. */
+   on the Roof of the World; `forage` scales what the land will give you. */
 const ZONES = {
-  varisia: { label: "Varisia", cold: 0, forage: 1.0, blurb: "Temperate coast. The road is kind, the markets rich." },
-  linnorm: { label: "The Linnorm North", cold: 0.2, forage: 0.75, blurb: "Ulfen country, turning cold. The last real towns." },
-  crown: { label: "The Crown of the World", cold: 1.0, forage: 0.12, blurb: "The polar ice. Nothing grows; the cold itself is the enemy." },
-  tianxia: { label: "Tian Xia", cold: 0, forage: 0.85, blurb: "The Dragon Empires. Foreign, fertile, and full of silk." },
+  varisia: { label: "the Westmarch", cold: 0, forage: 1.0, blurb: "Temperate coast. The road is kind, the markets rich." },
+  linnorm: { label: "The Wyrmking North", cold: 0.2, forage: 0.75, blurb: "Norr country, turning cold. The last real towns." },
+  crown: { label: "The Roof of the World", cold: 1.0, forage: 0.12, blurb: "The polar ice. Nothing grows; the cold itself is the enemy." },
+  tianxia: { label: "the Jade East", cold: 0, forage: 0.85, blurb: "The Dragon Empires. Foreign, fertile, and full of silk." },
 };
 
-/* --- The route: the canon Amatatsu road, Sandpoint to Minkai. Varisia to
-   Kalsgard, the Path of Aganhei across the Crown of the World to Ordu-Aganhei,
-   then down through the Forest of Spirits to the throne at Kasai (~1480 mi).
+/* --- The route: the canon Imperial road, Tidewatch to the Jade Empire. the Westmarch to
+   Kalsmark, the Frostroad across the Roof of the World to Eastgate,
+   then down through the Whispering Wood to the throne at the Jade Capital (~1480 mi).
    `beat` marks a fixed story pillar; `crossing` marks a ford or ice-pass.
    `market` = what a town PAYS (demand, >1 a premium); `offers` = what a town
    SELLS cheap (local supply, <1 a bargain). Prices float from there. */
 const ROUTE = [
-  { name: "Sandpoint", type: "city", zone: "varisia", town: true, note: "The Rusty Dragon at your back. Ameiko's road begins.",
+  { name: "Tidewatch", type: "city", zone: "varisia", town: true, note: "The Salt Kettle at your back. Akemi's road begins.",
     offers: { cloth: 0.7, glass: 0.72, iron: 0.72, reagents: 0.78 }, market: { furs: 1.15, tea: 1.2 } },
-  { name: "Brinestump Marsh", type: "wild", zone: "varisia", note: "Goblin country. Fireworks in the reeds." },
-  { name: "Brinewall", type: "town", zone: "varisia", town: true, beat: "brinewall", note: "The ruined castle on the coast. Ameiko's birthright sleeps here.",
+  { name: "Saltmire", type: "wild", zone: "varisia", note: "Goblin country. Fireworks in the reeds." },
+  { name: "Brackmoor", type: "town", zone: "varisia", town: true, beat: "brinewall", note: "The ruined castle on the coast. Akemi's birthright sleeps here.",
     offers: { cloth: 0.75, iron: 0.75 }, market: { furs: 1.1, glass: 1.15 } },
-  { name: "Grungir Forest", type: "wild", zone: "varisia", branch: "grungir", note: "Deep northern pinewood. The road forks toward the coast." },
-  { name: "Kalsgard", type: "city", zone: "linnorm", town: true, note: "Greatest city of the Linnorm Kings. The Path of Aganhei starts at its gate.",
+  { name: "Ironwood", type: "wild", zone: "varisia", branch: "grungir", note: "Deep northern pinewood. The road forks toward the coast." },
+  { name: "Kalsmark", type: "city", zone: "linnorm", town: true, note: "Greatest city of the Wyrmkings. The Frostroad starts at its gate.",
     offers: { furs: 0.58, amber: 0.62, whaleoil: 0.58, silk: 1.35 },
     market: { glass: 1.5, reagents: 1.4, cloth: 1.25, iron: 1.2 } },
   { name: "Stormspear Hills", type: "wild", zone: "linnorm", branch: "stormspear", note: "Windswept ridges. The tundra begins beyond." },
-  { name: "Turvik", type: "town", zone: "linnorm", town: true, note: "Fortified frontier town. The last stout walls before the ice.",
+  { name: "Fell's Reach", type: "town", zone: "linnorm", town: true, note: "Fortified frontier town. The last stout walls before the ice.",
     offers: { furs: 0.68, whaleoil: 0.7 }, market: { cloth: 1.35, iron: 1.3, glass: 1.4, reagents: 1.3 } },
   { name: "Rimethirst Pass", type: "wild", zone: "crown", crossing: "Rimethirst ice-pass", note: "The mountains climb into the true cold. Guides earn their fee here." },
-  { name: "Ul-Angorn", type: "town", zone: "crown", town: true, note: "A trade-town huddled in a frozen basin. Everything costs, and costs dear.",
+  { name: "Ang-Vhoral", type: "town", zone: "crown", town: true, note: "A trade-town huddled in a frozen basin. Everything costs, and costs dear.",
     offers: { furs: 0.95, whaleoil: 0.9 }, market: { furs: 1.7, whaleoil: 1.6, amber: 1.3 } },
   { name: "Dead Man's Dome", type: "wild", zone: "crown", note: "A pale dome of old ice. The dead are said to walk its skirts." },
   { name: "The High Ice", type: "wild", zone: "crown", beat: "highice", crossing: "Ovorikheer Pass", note: "The roof of the world. Ovorikheer Pass, and the storm that guards it." },
   { name: "Jaagiin", type: "town", zone: "crown", town: true, note: "A waystation where late caravans winter. The descent begins.",
     offers: { furs: 0.9, whaleoil: 0.85 }, market: { furs: 1.5, whaleoil: 1.45 } },
-  { name: "Ordu-Aganhei", type: "city", zone: "tianxia", town: true, note: "Gateway to the Dragon Empires. Western goods cash out here at last.",
+  { name: "Eastgate", type: "city", zone: "tianxia", town: true, note: "Gateway to the Dragon Empires. Western goods cash out here at last.",
     offers: { silk: 0.6, jade: 0.64, tea: 0.6 },
     market: { furs: 1.8, amber: 1.9, glass: 1.7, reagents: 1.6, cloth: 1.5, iron: 1.4, whaleoil: 1.3 } },
-  { name: "Forest of Spirits", type: "wild", zone: "tianxia", note: "Kami and kitsune in the mist. Not all of it means you harm." },
-  { name: "Kasai", type: "city", zone: "tianxia", town: true, beat: "kasai", note: "The capital of Minkai. The empty throne, and the Jade Regent upon it.",
+  { name: "Whispering Wood", type: "wild", zone: "tianxia", note: "Kami and kitsune in the mist. Not all of it means you harm." },
+  { name: "the Jade Capital", type: "city", zone: "tianxia", town: true, beat: "kasai", note: "The capital of the Jade Empire. The empty throne, and the Amber Regent upon it.",
     offers: { silk: 0.72, jade: 0.72 },
     market: { furs: 1.55, amber: 1.7, glass: 1.6, cloth: 1.4, reagents: 1.5, iron: 1.35, silk: 1.1, jade: 1.1 } },
 ];
@@ -94,14 +94,14 @@ const LEG_MILES = [40, 70, 110, 150, 90, 80, 110, 110, 90, 90, 100, 120, 100, 90
 
 const BRANCHES = {
   grungir: {
-    prompt: "The Grungir splits. The coast road is open and sure but longer. The forest track cuts deep and dark, shorter but thick with old things.",
+    prompt: "The Ironwood splits. The coast road is open and sure but longer. The forest track cuts deep and dark, shorter but thick with old things.",
     options: [
       { id: "coast", label: "Follow the coast road", tag: "safe", miles: 150, danger: 1, note: "Open, watched, dependable." },
       { id: "forest", label: "Cut through the forest", tag: "fast", miles: 116, danger: 3, note: "Saves ~34 mi. Wolves and worse." },
     ],
   },
   stormspear: {
-    prompt: "Past the Stormspear Hills lie two lines to Turvik. The valley trail is slow and safe. The ridge line is quick, and the wind up there can strip a wagon bare.",
+    prompt: "Past the Stormspear Hills lie two lines to Fell's Reach. The valley trail is slow and safe. The ridge line is quick, and the wind up there can strip a wagon bare.",
     options: [
       { id: "valley", label: "Keep to the valley", tag: "safe", miles: 80, danger: 1, note: "Sheltered, slower." },
       { id: "ridge", label: "Take the ridge line", tag: "fast", miles: 58, danger: 3, note: "Saves ~22 mi. Brutal wind." },
@@ -135,16 +135,16 @@ const WAGONS = {
    good is made and cheap; sell where it is exotic and wanted. Some break, some
    are simply heavy. Local supply (a town's `offers`) is where you buy in. */
 const GOODS = {
-  cloth: { label: "Varisian textiles", base: 6, bulk: 1, note: "Light, always wanted. Worth more the farther east it travels." },
+  cloth: { label: "Westmarch textiles", base: 6, bulk: 1, note: "Light, always wanted. Worth more the farther east it travels." },
   glass: { label: "Magnimar glassware", base: 10, bulk: 2, fragile: true, note: "High margin, but a bad crossing shatters it." },
   iron: { label: "Ironmongery", base: 6, bulk: 3, note: "Heavy and dull, but it never spoils." },
   reagents: { label: "Alchemical reagents", base: 14, bulk: 1, note: "Compact, valuable, and useful in a pinch." },
-  furs: { label: "Northern furs", base: 9, bulk: 2, note: "Cheap in Kalsgard; worth a fortune where no beast wears a coat." },
-  amber: { label: "Kalsgard amber", base: 20, bulk: 1, note: "Scrimshaw charms of the Amber Quarter. Precious in the east." },
+  furs: { label: "Northern furs", base: 9, bulk: 2, note: "Cheap in Kalsmark; worth a fortune where no beast wears a coat." },
+  amber: { label: "Kalsmark amber", base: 20, bulk: 1, note: "Scrimshaw charms of the Amber Quarter. Precious in the east." },
   whaleoil: { label: "Whale-oil", base: 7, bulk: 2, note: "Fuel and light. On the ice it is nearly life itself." },
-  silk: { label: "Tian silk", base: 22, bulk: 1, note: "Featherlight luxury of the Dragon Empires." },
-  jade: { label: "Carved jade", base: 30, bulk: 1, note: "The wealth of Minkai in a single crate." },
-  tea: { label: "Tian tea", base: 11, bulk: 1, note: "Bricks of pressed leaf, traded like coin." },
+  silk: { label: "Eastern silk", base: 22, bulk: 1, note: "Featherlight luxury of the Dragon Empires." },
+  jade: { label: "Carved jade", base: 30, bulk: 1, note: "The wealth of the Jade Empire in a single crate." },
+  tea: { label: "Eastern tea", base: 11, bulk: 1, note: "Bricks of pressed leaf, traded like coin." },
 };
 
 /* Which goods a town will let you BUY (its local supply). */
@@ -166,7 +166,7 @@ const ROSTER = [
     best: ["scout", "forage", "hunt"], tag: "Reads terrain, tracks, and feeds the party off the land.",
     combat: { hp: 44, ac: 18, touch: 13, atk: 9, init: 4, saves: { fort: 5, ref: 8, will: 3 }, res: {}, moves: ["aimedShot", "rapidShot", "cripplingShot", "wolfMaul"], role: "Ranged skirmisher who fights with a beast at his side." } },
 
-  { id: "halden", name: "Hayden", cls: "Cleric", blurb: "Priest of Erastil, road-blesser.",
+  { id: "halden", name: "Hayden", cls: "Cleric", blurb: "Priest of the Old Hunter, road-blesser.",
     maxHp: 40, skills: { survival: 5, perception: 6, stealth: 0, heal: 12, athletics: 4, diplomacy: 8, disable: 0, knowledge: 8 },
     res: { channels: 5, spells1: 4, spells2: 3, spells3: 2, removeDisease: true }, kit: "Spells to 3rd and five channels a day; at last he can pray a fever from the blood.",
     best: ["medic", "tend"], tag: "Channels wounds shut, and can burn a sickness out of beast or man.",
@@ -190,7 +190,7 @@ const ROSTER = [
     best: ["guard", "repair"], tag: "Wall of the caravan. Blunts an ambush, muscles a wagon free.",
     combat: { hp: 52, ac: 20, touch: 12, atk: 10, init: 3, saves: { fort: 8, ref: 4, will: 3 }, res: {}, moves: ["powerAttack", "cleave", "guardAlly", "sunder"], role: "Anchor of the line." } },
 
-  { id: "sura", name: "Sura", cls: "Barbarian", blurb: "Shoanti of the Cinderlands.",
+  { id: "sura", name: "Sura", cls: "Barbarian", blurb: "highland of the Ashlands.",
     maxHp: 56, skills: { survival: 8, perception: 7, stealth: 4, heal: 2, athletics: 12, diplomacy: 2, disable: 0, knowledge: 2 },
     res: { rage: 3 }, kit: "Unchained rage and Raging Vitality. Hauls the caravan out of trouble by force.",
     best: ["guard", "hunt"], tag: "Rage and raw strength, and a shoulder set to any stuck wheel.",
@@ -291,8 +291,8 @@ const MOVES = {
   // -- Barbarian (rage) --
   rage: { name: "Rage", kind: "rage", target: "self", status: { k: "raging", dur: 5, atk: 2, dmg: 4, ac: -2 }, tempHp: 12, cost: { rage: 1 }, desc: "Enter a fury: harder hits, tougher hide, looser guard." },
   recklessSwing: { name: "Reckless Swing", kind: "attack", target: "enemy", penalty: 3, dmg: [2, 6, 6], desc: "A huge, wild arc. Often misses; seldom forgiven when it lands." },
-  charge: { name: "Cinderlands Charge", kind: "attack", target: "enemy", dmg: [1, 12, 4], selfRider: { k: "exposed", dur: 1, ac: -2 }, desc: "Barrel in for a heavy hit, and leave yourself open." },
-  roar: { name: "Intimidating Roar", kind: "debuff", target: "allEnemies", save: "will", dc: 14, status: { k: "frightened", dur: 2, atk: -2 }, desc: "A Shoanti war-cry that shakes the whole enemy line." },
+  charge: { name: "Ashlands Charge", kind: "attack", target: "enemy", dmg: [1, 12, 4], selfRider: { k: "exposed", dur: 1, ac: -2 }, desc: "Barrel in for a heavy hit, and leave yourself open." },
+  roar: { name: "Intimidating Roar", kind: "debuff", target: "allEnemies", save: "will", dc: 14, status: { k: "frightened", dur: 2, atk: -2 }, desc: "A highland war-cry that shakes the whole enemy line." },
   // -- Bard (the hybrid) --
   crossbowShot: { name: "Crossbow Shot", kind: "attack", target: "enemy", dmg: [1, 8, 2], desc: "A bolt from the flank." },
   inspireCourage: { name: "Inspire Courage", kind: "buff", target: "allAllies", status: { k: "inspired", dur: 4, atk: 2, dmg: 2 }, cost: { performance: 1 }, desc: "A rousing song; the party hits harder and truer." },
@@ -316,29 +316,6 @@ const MOVES = {
   // -- Sorcerer (fire in the blood) --
   bloodfireBolt: { name: "Bloodfire Bolt", kind: "touch", target: "enemy", dmg: [1, 6, 2], desc: "A bloodline cantrip; a lash of flame, always ready." },
   mirrorImage: { name: "Mirror Image", kind: "buff", target: "self", status: { k: "blurred", dur: 3, soak: 0.5 }, desc: "Flickering duplicates; blows often strike an image, not you." },
-  // -- Advanced moves, unlocked as the company grows seasoned (levels 6-7) --
-  huntersMark: { name: "Hunter's Mark", kind: "attack", target: "enemy", atkBonus: 2, dmg: [2, 8, 4], rider: { k: "crippled", dur: 2, atk: -2 }, desc: "A marked, punishing shot; the foe fights worse for it." },
-  deadeye: { name: "Deadeye Shot", kind: "attack", target: "enemy", atkBonus: 3, dmg: [2, 8, 6], desc: "A killing arrow, placed with terrible precision." },
-  healingWord: { name: "Healing Word", kind: "heal", target: "ally", heal: [3, 8, 8], cost: { spells2: 1 }, desc: "A greater mending that closes even grave wounds." },
-  flamestrike: { name: "Flame Strike", kind: "save", target: "allEnemies", dmg: [4, 6, 0], save: "ref", dc: 15, half: true, cost: { spells2: 1 }, desc: "A column of holy fire across the enemy line. Reflex halves." },
-  viciousStrike: { name: "Vicious Strike", kind: "attack", target: "enemy", dmg: [1, 6, 4], sneak: [4, 6, 2], desc: "A murderous blow, ruinous against an off-guard foe." },
-  bleedingStrike: { name: "Hamstring", kind: "attack", target: "enemy", dmg: [2, 6, 3], rider: { k: "bleeding", dur: 3, dot: 4 }, desc: "A deep cut that bleeds the foe through the whole fight." },
-  forceLance: { name: "Force Lance", kind: "auto", target: "enemy", dmg: [4, 4, 4], cost: { spells2: 1 }, desc: "A honed spear of pure force. Never misses, and it hurts." },
-  greaterFireball: { name: "Greater Fireball", kind: "save", target: "allEnemies", dmg: [7, 6, 0], save: "ref", dc: 17, half: true, cost: { spells3: 1 }, desc: "A roaring blast that engulfs every foe. Reflex halves." },
-  mightyBlow: { name: "Mighty Blow", kind: "attack", target: "enemy", penalty: 2, dmg: [2, 10, 8], desc: "A tremendous overhand swing. Less sure, devastating when it lands." },
-  whirlwind: { name: "Whirlwind", kind: "attack", target: "enemy", dmg: [1, 10, 4], extraTargets: 2, desc: "A spinning cut that carries into two more foes." },
-  greaterRage: { name: "Greater Rage", kind: "rage", target: "self", status: { k: "raging", dur: 5, atk: 3, dmg: 6, ac: -2 }, tempHp: 18, cost: { rage: 1 }, desc: "A deeper fury: harder hits, tougher hide still." },
-  brutalCharge: { name: "Brutal Charge", kind: "attack", target: "enemy", dmg: [2, 12, 6], selfRider: { k: "exposed", dur: 1, ac: -2 }, desc: "A thunderous running blow that leaves you wide open." },
-  strikingChord: { name: "Striking Chord", kind: "touch", target: "enemy", dmg: [3, 6, 2], cost: { spells2: 1 }, desc: "A blast of sound that rattles bone and armour alike." },
-  inspireHeroics: { name: "Inspire Heroics", kind: "buff", target: "allAllies", status: { k: "inspired", dur: 5, atk: 3, dmg: 3 }, cost: { performance: 1 }, desc: "A soaring anthem; the whole party fights like heroes." },
-  flameBlade: { name: "Flame Blade", kind: "attack", target: "enemy", dmg: [2, 8, 4], cost: { spells2: 1 }, desc: "A scimitar of fire conjured to the hand." },
-  stormburst: { name: "Storm Burst", kind: "save", target: "allEnemies", dmg: [5, 6, 0], save: "ref", dc: 16, half: true, cost: { spells3: 1 }, desc: "The sky splits over the whole enemy line. Reflex halves." },
-  risingFlurry: { name: "Rising Flurry", kind: "attack", target: "enemy", penalty: 1, extraHits: 2, dmg: [1, 8, 3], desc: "A blinding rain of three strikes, each a shade less sure." },
-  quiveringPalm: { name: "Quivering Palm", kind: "attack", target: "enemy", dmg: [3, 6, 4], rider: { k: "stunned", dur: 2, skip: true, chance: 0.5 }, cost: { ki: 1 }, desc: "A killing touch that can stop a foe cold." },
-  greaterLay: { name: "Greater Lay on Hands", kind: "heal", target: "ally", heal: [3, 6, 7], cost: { layOnHands: 1 }, desc: "A greater healing touch; wounds knit under her palm." },
-  radiantSmite: { name: "Radiant Smite", kind: "attack", target: "enemy", atkBonus: 3, dmg: [2, 10, 10], cost: { smite: 1 }, desc: "A vow blazing into steel; a devastating, sure blow." },
-  empoweredBolt: { name: "Empowered Bolt", kind: "touch", target: "enemy", dmg: [3, 6, 3], desc: "The bloodline burns hotter now, a heavier lash of flame, always ready." },
-  infernoBlast: { name: "Inferno Blast", kind: "save", target: "allEnemies", dmg: [7, 6, 0], save: "ref", dc: 17, half: true, cost: { spells3: 1 }, desc: "The blood ignites; fire consumes every foe. Reflex halves." },
   // -- foes --
   foeSlash: { name: "Slash", kind: "attack", target: "enemy", dmg: [1, 8, 4] },
   foeShoot: { name: "Shortbow", kind: "attack", target: "enemy", dmg: [1, 8, 3] },
@@ -349,14 +326,14 @@ const MOVES = {
   foeSmash: { name: "Crushing Smash", kind: "attack", target: "enemy", dmg: [2, 10, 6], rider: { k: "offguard", dur: 2, ac: -2, offguard: true } },
   foeRally: { name: "Rally the Crew", kind: "buff", target: "allAllies", status: { k: "rallied", dur: 3, atk: 2, dmg: 2 } },
   foeTongue: { name: "Tongue Lash", kind: "attack", target: "enemy", dmg: [1, 6, 3], rider: { k: "offguard", dur: 2, ac: -2, offguard: true, chance: 0.5 } },
-  // -- northern & Ulfen --
-  foeChop: { name: "Ulfen Axe", kind: "attack", target: "enemy", dmg: [1, 10, 4] },
+  // -- northern & Norr --
+  foeChop: { name: "Norr Axe", kind: "attack", target: "enemy", dmg: [1, 10, 4] },
   // -- ice & undead --
   foeRime: { name: "Rime Claw", kind: "attack", target: "enemy", dmg: [1, 8, 4], rider: { k: "chilled", dur: 2, atk: -1, ac: -1 } },
   foeMaul2: { name: "Frost Maul", kind: "attack", target: "enemy", dmg: [2, 8, 6], rider: { k: "offguard", dur: 2, ac: -2, offguard: true, chance: 0.4 } },
   foeFrostBreath: { name: "Frost Breath", kind: "save", target: "allEnemies", dmg: [3, 6, 0], save: "fort", dc: 15, half: true },
   foeHowl: { name: "Ghast Howl", kind: "debuff", target: "allEnemies", save: "will", dc: 15, status: { k: "frightened", dur: 2, atk: -2 } },
-  // -- Tian Xia oni & spirits --
+  // -- the Jade East oni & spirits --
   foeOniClub: { name: "Kanabō Smash", kind: "attack", target: "enemy", dmg: [2, 10, 7], rider: { k: "offguard", dur: 2, ac: -2, offguard: true, chance: 0.5 } },
   foeCurse: { name: "Oni Curse", kind: "debuff", target: "enemy", touchHit: true, status: { k: "cursed", dur: 3, atk: -2, dmg: -2 } },
   foeDrain: { name: "Life Siphon", kind: "touch", target: "enemy", dmg: [2, 6, 3] },
@@ -368,53 +345,10 @@ const MOVES = {
   foeInvoke: { name: "Invoke the Storm", kind: "buff", target: "allAllies", status: { k: "stormblessed", dur: 3, atk: 2, dmg: 3 } },
 };
 
-/* =============================== LEVELING ========================= *
- * The company shares experience from the fights it wins and grows more
- * seasoned over the long road: level 5 at the outset, up to level 7 by the
- * end of a hard journey. Each level unlocks one advanced move per class that
- * REPLACES that class's weakest one, options change, not just numbers, plus
- * a small bump in staying power. */
-const MAX_LEVEL = 7;
-const XP_THRESH = { 6: 800, 7: 2300 }; // cumulative party XP needed for each level
-const MOVE_PROGRESSION = {
-  Ranger: [{ lvl: 6, learn: "huntersMark", replace: "cripplingShot" }, { lvl: 7, learn: "deadeye", replace: "rapidShot" }],
-  Cleric: [{ lvl: 6, learn: "healingWord", replace: "cureWounds" }, { lvl: 7, learn: "flamestrike", replace: "searingLight" }],
-  Rogue: [{ lvl: 6, learn: "viciousStrike", replace: "sneakAttack" }, { lvl: 7, learn: "bleedingStrike", replace: "alchemistFire" }],
-  Wizard: [{ lvl: 6, learn: "forceLance", replace: "magicMissile" }, { lvl: 7, learn: "greaterFireball", replace: "fireball" }],
-  Fighter: [{ lvl: 6, learn: "mightyBlow", replace: "powerAttack" }, { lvl: 7, learn: "whirlwind", replace: "cleave" }],
-  Barbarian: [{ lvl: 6, learn: "greaterRage", replace: "rage" }, { lvl: 7, learn: "brutalCharge", replace: "charge" }],
-  Bard: [{ lvl: 6, learn: "strikingChord", replace: "discordantNote" }, { lvl: 7, learn: "inspireHeroics", replace: "inspireCourage" }],
-  Druid: [{ lvl: 6, learn: "flameBlade", replace: "thornLash" }, { lvl: 7, learn: "stormburst", replace: "callLightning" }],
-  Monk: [{ lvl: 6, learn: "risingFlurry", replace: "flurry" }, { lvl: 7, learn: "quiveringPalm", replace: "elementalFist" }],
-  Paladin: [{ lvl: 6, learn: "greaterLay", replace: "layOnHands" }, { lvl: 7, learn: "radiantSmite", replace: "smiteEvil" }],
-  Sorcerer: [{ lvl: 6, learn: "empoweredBolt", replace: "bloodfireBolt" }, { lvl: 7, learn: "infernoBlast", replace: "fireball" }],
-};
-/* A class's actual battle kit at a given party level (base moves with unlocks swapped in). */
-function activeMovesFor(id, level) {
-  const M = BY_ID[id];
-  const moves = [...M.combat.moves];
-  for (const step of MOVE_PROGRESSION[M.cls] || []) {
-    if ((level || 5) >= step.lvl) { const i = moves.indexOf(step.replace); if (i >= 0) moves[i] = step.learn; else if (!moves.includes(step.learn)) moves.push(step.learn); }
-  }
-  return moves;
-}
-/* Award party XP and promote through level thresholds, announcing what's learned. */
-function grantXP(st, amount) {
-  if (!amount) return;
-  st.xp = (st.xp || 0) + amount;
-  let lvl = st.level || 5;
-  while (lvl < MAX_LEVEL && st.xp >= (XP_THRESH[lvl + 1] || Infinity)) {
-    lvl += 1;
-    st.party = st.party.map((p) => ({ ...p, maxHpBase: (p.maxHpBase || p.maxHp) + 4, maxHp: p.maxHp + 4, hp: p.hp > 0 ? p.hp + 4 : p.hp }));
-    const learned = st.party.map((p) => { const step = (MOVE_PROGRESSION[BY_ID[p.id].cls] || []).find((s) => s.lvl === lvl); return step ? `${BY_ID[p.id].name} learns ${MOVES[step.learn].name}` : null; }).filter(Boolean);
-    pushLog(st, `The company grows more seasoned, you reach level ${lvl}. ${learned.join("; ")}.`, "arrive");
-  }
-  st.level = lvl;
-}
 /* Tuned for a level-5 party of four, escalating gently by zone. The three
    bosses are the fixed story pillars and hit far harder than the road rabble. */
 const ENEMIES = {
-  // -- Varisia --
+  // -- the Westmarch --
   bandit: { name: "Sczarni Bandit", hp: 26, ac: 16, touch: 12, atk: 7, init: 3, saves: { fort: 4, ref: 5, will: 2 }, moves: ["foeSlash"] },
   archer: { name: "Bandit Archer", hp: 22, ac: 15, touch: 13, atk: 9, init: 5, saves: { fort: 3, ref: 6, will: 2 }, moves: ["foeShoot"] },
   toughboss: { name: "Toll-Boss", hp: 62, ac: 18, touch: 12, atk: 10, init: 4, saves: { fort: 7, ref: 5, will: 5 }, moves: ["foeCleave", "foeSmash", "foeRally"], boss: true },
@@ -422,28 +356,28 @@ const ENEMIES = {
   direwolf: { name: "Direwolf", hp: 42, ac: 16, touch: 13, atk: 10, init: 7, saves: { fort: 7, ref: 7, will: 2 }, moves: ["foeBite"] },
   skeleton: { name: "Skeleton", hp: 22, ac: 16, touch: 12, atk: 7, init: 5, saves: { fort: 1, ref: 3, will: 4 }, moves: ["foeClaw"] },
   boggard: { name: "Boggard", hp: 34, ac: 16, touch: 11, atk: 8, init: 2, saves: { fort: 6, ref: 3, will: 2 }, moves: ["foeStab", "foeTongue"] },
-  // -- Linnorm North --
-  raider: { name: "Ulfen Raider", hp: 34, ac: 17, touch: 12, atk: 9, init: 4, saves: { fort: 6, ref: 4, will: 3 }, moves: ["foeChop"] },
+  // -- Wyrmking North --
+  raider: { name: "Norr Raider", hp: 34, ac: 17, touch: 12, atk: 9, init: 4, saves: { fort: 6, ref: 4, will: 3 }, moves: ["foeChop"] },
   frostwolf: { name: "Frost Wolf", hp: 46, ac: 16, touch: 13, atk: 11, init: 8, saves: { fort: 8, ref: 7, will: 2 }, moves: ["foeBite"] },
   huskarl: { name: "Linnorm Huskarl", hp: 58, ac: 19, touch: 12, atk: 12, init: 4, saves: { fort: 8, ref: 5, will: 5 }, moves: ["foeCleave", "foeChop"] },
-  // -- Crown of the World --
+  // -- Roof of the World --
   icetroll: { name: "Ice Troll", hp: 56, ac: 17, touch: 11, atk: 11, init: 3, saves: { fort: 8, ref: 4, will: 4 }, moves: ["foeRime", "foeMaul2"] },
   wendigo: { name: "Frost-Gaunt", hp: 38, ac: 16, touch: 14, atk: 10, init: 9, saves: { fort: 5, ref: 8, will: 6 }, moves: ["foeRime", "foeHowl"] },
   icewight: { name: "Ice-Bound Dead", hp: 30, ac: 15, touch: 12, atk: 8, init: 5, saves: { fort: 3, ref: 4, will: 6 }, moves: ["foeClaw", "foeHowl"] },
   yeti: { name: "Abominable Yeti", hp: 52, ac: 16, touch: 12, atk: 11, init: 5, saves: { fort: 8, ref: 5, will: 4 }, moves: ["foeMaul2", "foeFrostBreath"] },
-  // -- Tian Xia --
+  // -- the Jade East --
   ronin: { name: "Masterless Ronin", hp: 40, ac: 19, touch: 13, atk: 11, init: 6, saves: { fort: 5, ref: 7, will: 4 }, moves: ["foeSlash", "foeStab"] },
   onilesser: { name: "Lesser Oni", hp: 56, ac: 18, touch: 12, atk: 12, init: 5, saves: { fort: 7, ref: 5, will: 7 }, moves: ["foeOniClub", "foeCurse"] },
   spiritbeast: { name: "Angry Kami", hp: 48, ac: 18, touch: 15, atk: 11, init: 8, saves: { fort: 6, ref: 8, will: 8 }, moves: ["foeRime", "foeDrain"] },
   // -- Bosses (fixed story battles) --
-  bossBrinewall: { name: "Kikonu, the Faceless", hp: 104, ac: 20, touch: 12, atk: 12, init: 5, saves: { fort: 9, ref: 6, will: 9 }, moves: ["foeOniClub", "foeCurse", "foeMaul2", "foeRally"], boss: true },
-  bossStorm: { name: "Katiyana, the Storm-Caller", hp: 108, ac: 20, touch: 15, atk: 11, init: 9, saves: { fort: 7, ref: 9, will: 11 }, moves: ["foeBolt", "foeStormcall", "foeRimeShield", "foeRime"], boss: true },
-  bossRegent: { name: "The Jade Regent", hp: 150, ac: 22, touch: 14, atk: 14, init: 7, saves: { fort: 11, ref: 8, will: 12 }, moves: ["foeJadeStrike", "foeInvoke", "foeStormcall", "foeCurse"], boss: true },
+  bossBrackmoor: { name: "the Faceless Oni", hp: 104, ac: 20, touch: 12, atk: 12, init: 5, saves: { fort: 9, ref: 6, will: 9 }, moves: ["foeOniClub", "foeCurse", "foeMaul2", "foeRally"], boss: true },
+  bossStorm: { name: "the Storm-Witch", hp: 108, ac: 20, touch: 15, atk: 11, init: 9, saves: { fort: 7, ref: 9, will: 11 }, moves: ["foeBolt", "foeStormcall", "foeRimeShield", "foeRime"], boss: true },
+  bossRegent: { name: "The Amber Regent", hp: 150, ac: 22, touch: 14, atk: 14, init: 7, saves: { fort: 11, ref: 8, will: 12 }, moves: ["foeJadeStrike", "foeInvoke", "foeStormcall", "foeCurse"], boss: true },
 };
 
 /* =============================== ENCOUNTERS ======================= */
 const ENCOUNTERS = {
-  // -- Varisia --
+  // -- the Westmarch --
   banditToll: { name: "The Toll", desc: "Bandits and their toll-boss.", foes: [["bandit", 3], ["archer", 1], ["toughboss", 1]], gold: 90, loot: { medicine: 2 } },
   goblinAmbush: { name: "Goblin Ambush", desc: "A howling pack of goblins.", foes: [["goblin", 8]], gold: 40, loot: { ammo: 6 } },
   direwolves: { name: "Wolves in the Wood", desc: "Winter-gaunt direwolves.", foes: [["direwolf", 3]], gold: 55, loot: { medicine: 1 } },
@@ -451,33 +385,33 @@ const ENCOUNTERS = {
   roadThieves: { name: "Road Thieves", desc: "A few chancers with knives.", foes: [["bandit", 2], ["archer", 1]], gold: 35, loot: {} },
   wolfPair: { name: "A Hunting Pair", desc: "Two direwolves circle the caravan.", foes: [["direwolf", 2]], gold: 40, loot: {} },
   bogAmbush: { name: "The Bog Rises", desc: "Boggards and goblins from the reeds.", foes: [["boggard", 2], ["goblin", 3]], gold: 50, loot: { medicine: 1 } },
-  // -- Linnorm North --
-  raiders: { name: "Ulfen Raiders", desc: "Axe-men off the tundra.", foes: [["raider", 3], ["archer", 1]], gold: 70, loot: { medicine: 1 } },
+  // -- Wyrmking North --
+  raiders: { name: "Norr Raiders", desc: "Axe-men off the tundra.", foes: [["raider", 3], ["archer", 1]], gold: 70, loot: { medicine: 1 } },
   frostPack: { name: "Frost Wolves", desc: "A pack out of the snow.", foes: [["frostwolf", 3]], gold: 65, loot: {} },
   huskarlBand: { name: "A Huskarl's Warband", desc: "A linnorm-lord's sworn men.", foes: [["huskarl", 1], ["raider", 3]], gold: 110, loot: { medicine: 2 } },
-  // -- Crown of the World --
+  // -- Roof of the World --
   trollAmbush: { name: "Ice Trolls", desc: "Regenerating horrors of the pass.", foes: [["icetroll", 2]], gold: 90, loot: { medicine: 1 } },
   frostGaunts: { name: "Frost-Gaunts", desc: "Starved things that hunt the ice.", foes: [["wendigo", 2], ["icewight", 1]], gold: 80, loot: {} },
   domeDead: { name: "The Dome's Dead", desc: "The walking dead of Dead Man's Dome.", foes: [["icewight", 4]], gold: 95, loot: { medicine: 1 } },
   yetiPair: { name: "Abominable Yetis", desc: "White death out of a whiteout.", foes: [["yeti", 2]], gold: 120, loot: { medicine: 2 } },
-  // -- Tian Xia --
+  // -- the Jade East --
   roninBand: { name: "Masterless Blades", desc: "Ronin turned brigand.", foes: [["ronin", 3]], gold: 85, loot: {} },
-  oniPatrol: { name: "Oni Patrol", desc: "The Five Storms' outriders.", foes: [["onilesser", 2], ["ronin", 1]], gold: 130, loot: { medicine: 2 } },
+  oniPatrol: { name: "Oni Patrol", desc: "The storm-lords' outriders.", foes: [["onilesser", 2], ["ronin", 1]], gold: 130, loot: { medicine: 2 } },
   spirits: { name: "Restless Kami", desc: "Angry spirits of the wood.", foes: [["spiritbeast", 2]], gold: 70, loot: {} },
   // -- Fixed bosses --
-  bossBrinewall: { name: "Kikonu, the Faceless", desc: "The oni guardian coiled in Brinewall's vault.", foes: [["bossBrinewall", 1], ["icewight", 1]], gold: 240, loot: { medicine: 3 }, boss: true },
-  bossStorm: { name: "Katiyana, the Storm-Caller", desc: "The Hungry Storm, given a face at last.", foes: [["bossStorm", 1], ["wendigo", 1]], gold: 300, loot: { medicine: 3 }, boss: true },
-  bossRegent: { name: "The Jade Regent", desc: "The tyrant on the stolen throne, and his Five Storms.", foes: [["bossRegent", 1], ["onilesser", 1]], gold: 500, loot: { medicine: 4 }, boss: true },
+  bossBrackmoor: { name: "the Faceless Oni", desc: "The oni guardian coiled in Brackmoor's vault.", foes: [["bossBrackmoor", 1], ["icewight", 1]], gold: 240, loot: { medicine: 3 }, boss: true },
+  bossStorm: { name: "the Storm-Witch", desc: "The Devouring Storm, given a face at last.", foes: [["bossStorm", 1], ["wendigo", 1]], gold: 300, loot: { medicine: 3 }, boss: true },
+  bossRegent: { name: "The Amber Regent", desc: "The tyrant on the stolen throne, and his storm-lords.", foes: [["bossRegent", 1], ["onilesser", 1]], gold: 500, loot: { medicine: 4 }, boss: true },
 };
 
 /* --- Region-keyed ambush tables (weights are percentages, summing to 100). */
 const REGION_COMBAT = {
-  "Brinestump Marsh": [["goblinAmbush", 55], ["bogAmbush", 30], ["wolfPair", 15]],
-  "Grungir Forest": [["direwolves", 40], ["banditToll", 30], ["roadThieves", 30]],
+  "Saltmire": [["goblinAmbush", 55], ["bogAmbush", 30], ["wolfPair", 15]],
+  "Ironwood": [["direwolves", 40], ["banditToll", 30], ["roadThieves", 30]],
   "Stormspear Hills": [["raiders", 45], ["frostPack", 35], ["roadThieves", 20]],
   "Rimethirst Pass": [["frostPack", 40], ["trollAmbush", 40], ["frostGaunts", 20]],
   "Dead Man's Dome": [["domeDead", 60], ["frostGaunts", 25], ["trollAmbush", 15]],
-  "Forest of Spirits": [["spirits", 45], ["roninBand", 30], ["oniPatrol", 25]],
+  "Whispering Wood": [["spirits", 45], ["roninBand", 30], ["oniPatrol", 25]],
 };
 const WILD_BY_ZONE = {
   varisia: [["roadThieves", 40], ["goblinAmbush", 30], ["wolfPair", 30]],
@@ -494,7 +428,7 @@ function combatChanceFor(st) {
   const danger = st.legDanger[st.legIndex] || 1;
   const z = ZONES[node.zone] || ZONES.varisia;
   const zoneRisk = z.cold >= 1 ? 0.10 : z.cold > 0 ? 0.06 : 0.03;
-  return clamp((0.18 + danger * 0.055 + zoneRisk + seasonStage(st.day).sev * 0.06) * repFx(st).combatMul, 0, 0.58);
+  return clamp((0.14 + danger * 0.048 + zoneRisk + seasonStage(st.day).sev * 0.055) * repFx(st).combatMul, 0, 0.55);
 }
 function regionTable(st) { const node = ROUTE[st.legIndex]; return REGION_COMBAT[node.name] || WILD_BY_ZONE[node.zone] || WILD_BY_ZONE.varisia; }
 
@@ -513,7 +447,7 @@ const COMBAT_ITEMS = {
                 medicine/ammo stores), spent from the bag in combat. */
 
 const VALUABLES = {
-  // Varisia
+  // the Westmarch
   pelt: { name: "Wolf Pelt", value: 12 },
   purse: { name: "Bandit's Purse", value: 20 },
   fetish: { name: "Goblin Fetish", value: 8 },
@@ -521,22 +455,22 @@ const VALUABLES = {
   // Linnorm north
   tusk: { name: "Ivory Tusk", value: 45 },
   axehead: { name: "Rune-Etched Axe-Head", value: 60 },
-  // Crown of the World
+  // Roof of the World
   frostopal: { name: "Frost-Opal", value: 80 },
   yetihide: { name: "Yeti Hide", value: 70 },
   trollhide: { name: "Troll-Hide", value: 55 },
-  // Tian Xia
+  // the Jade East
   netsuke: { name: "Jade Netsuke", value: 90 },
   brocade: { name: "Silk Brocade", value: 65 },
   onihorn: { name: "Oni Horn", value: 120 },
   // Boss trophies
-  kikonu_mask: { name: "Kikonu's Faceless Mask", value: 260 },
+  kikonu_mask: { name: "the Faceless Oni's Mask", value: 260 },
   stormglass: { name: "Storm-Glass Shard", value: 320 },
-  regent_seal: { name: "The Jade Regent's Seal", value: 520 },
+  regent_seal: { name: "The Amber Regent's Seal", value: 520 },
 };
 
 const RELICS = {
-  erastil_token: { name: "Erastil's Token", desc: "+1 to all party saves.", fx: { saves: 1 } },
+  erastil_token: { name: "the Old Hunter's Token", desc: "+1 to all party saves.", fx: { saves: 1 } },
   ivory_charm: { name: "Ivory Luck-Charm", desc: "+1 to hit for the whole party.", fx: { atk: 1 } },
   bloodstone: { name: "Bloodstone Amulet", desc: "+2 AC for the whole party.", fx: { ac: 2 } },
   frostward: { name: "Frost-Ward Charm", desc: "The cold cuts half as deep.", fx: { coldMul: 0.5 } },
@@ -605,6 +539,57 @@ function injureOne(st, cause) {
   return line;
 }
 /* Set a bone: clear one injury and restore that traveler's full frame. */
+const RAISE_FEE = 300;   // a temple's rite, at a great city
+const RECRUIT_FEE = 110; // a fresh hand, at any town
+/* Anyone brought to zero who is not already fallen dies now, for good. Rest
+   will not bring them back; only a town can. This is called after every bout of
+   road damage and at the close of every battle. */
+function reapDead(st, cause, pFatal = 0.3) {
+  const died = [], wounded = [];
+  st.party = st.party.map((p) => {
+    if (p.hp <= 0 && !p.dead) {
+      if (Math.random() < pFatal) { died.push(BY_ID[p.id].name); return { ...p, dead: true, hp: 0, injury: null, disease: null }; }
+      const inj = INJURIES[(Math.random() * INJURIES.length) | 0];
+      const maxHp = Math.max(1, Math.round((p.maxHpBase || p.maxHp) * (1 - inj.pct)));
+      wounded.push(BY_ID[p.id].name);
+      return { ...p, hp: Math.max(1, Math.round(maxHp * 0.22)), injury: inj.name, maxHp };
+    }
+    return p;
+  });
+  for (const n of died) pushLog(st, `${n} has fallen ${cause} and will not rise again on this road. Only a temple's rite at a great city, or a new hand taken on at a town, can answer a loss like this.`, "bad");
+  for (const n of wounded) pushLog(st, `${n} is dragged back from the brink, alive but gravely hurt, ${cause}. They will be weak and slow, and no camp will set them right; only a proper rest in a town will mend it.`, "warn");
+  return died.length;
+}
+/* Take on a fresh traveler of a class you are missing, at any town. They join at
+   the company's current level and fill a fallen comrade's empty place. */
+function recruitMember(s, newId) {
+  const node = ROUTE[s.legIndex];
+  if (!node.town || !BY_ID[newId]) return s;
+  const deadIdx = s.party.findIndex((p) => p.dead);
+  if (deadIdx < 0) return s;
+  if (s.party.some((p) => !p.dead && p.id === newId)) return s;
+  if (s.res.gold < RECRUIT_FEE) return s;
+  const M = BY_ID[newId];
+  const st = { ...s, res: { ...s.res, gold: s.res.gold - RECRUIT_FEE }, party: s.party.map((p) => ({ ...p })), roles: { ...s.roles }, log: [...s.log] };
+  const hp = M.maxHp;
+  st.party[deadIdx] = { id: newId, hp, maxHp: hp, maxHpBase: hp, injury: null, disease: null, dead: false, res: depletables(M.res) };
+  st.roles[newId] = "guard";
+  pushLog(st, `At ${node.name} you take on ${M.name}, a ${M.cls.toLowerCase()}, to fill an empty place at the fire. ${RECRUIT_FEE} gp for the outfitting, and the company is whole again, if not unchanged.`, "arrive");
+  return st;
+}
+/* Pay a temple to raise a specific fallen comrade. Cities only. */
+function raiseDead(s, id) {
+  const node = ROUTE[s.legIndex];
+  if (node.type !== "city") return s;
+  const idx = s.party.findIndex((p) => p.dead && p.id === id);
+  if (idx < 0 || s.res.gold < RAISE_FEE) return s;
+  const st = { ...s, res: { ...s.res, gold: s.res.gold - RAISE_FEE }, party: s.party.map((p) => ({ ...p })), log: [...s.log] };
+  const p = st.party[idx];
+  st.party[idx] = { ...p, dead: false, hp: Math.max(1, Math.round(p.maxHp * 0.4)), injury: null, disease: null };
+  pushLog(st, `In the temple at ${node.name}, priests work the rite of return over ${BY_ID[id].name}. ${RAISE_FEE} gp for the offering, and they draw breath again, pale and shaken, but alive.`, "arrive");
+  return st;
+}
+
 function mendInjuries(st) {
   let mended = 0;
   st.party = st.party.map((p) => {
@@ -763,9 +748,9 @@ const memRes = (st, id, k) => { const p = st.party.find((x) => x.id === id); ret
 
 /* Calendar severity (bible §14, rewritten for the long road). This is no longer
    a death clock; it is a gentle ramp that darkens the weather and, crucially,
-   makes a LATE arrival on the Crown of the World colder and deadlier. The ice
+   makes a LATE arrival on the Roof of the World colder and deadlier. The ice
    itself is now the winter. A caravan hopelessly behind is stranded at day 200. */
-const STRAND_DAY = 240;
+const STRAND_DAY = 265;
 function seasonStage(day) {
   const sev = clamp((day - 20) / 120, 0, 1);
   let key = "open", label = "the season is young";
@@ -775,7 +760,7 @@ function seasonStage(day) {
   return { key, label, sev, winter: sev };
 }
 /* Environmental cold at the current node: the zone's cold, intensified by how
-   late in the year you reach it. Zero in Varisia and Tian Xia. */
+   late in the year you reach it. Zero in the Westmarch and the Jade East. */
 function coldFor(st) {
   const z = ZONES[ROUTE[st.legIndex].zone] || ZONES.varisia;
   if (z.cold <= 0) return 0;
@@ -835,7 +820,7 @@ function initSetup() {
 function startJourney(s) {
   const lo = s.loadout;
   const spent = loadoutCost(lo);
-  const party = s.picked.map((id) => ({ id, hp: BY_ID[id].maxHp, maxHp: BY_ID[id].maxHp, maxHpBase: BY_ID[id].maxHp, injury: null, disease: null, res: depletables(BY_ID[id].res) }));
+  const party = s.picked.map((id) => ({ id, hp: BY_ID[id].maxHp, maxHp: BY_ID[id].maxHp, maxHpBase: BY_ID[id].maxHp, injury: null, disease: null, dead: false, res: depletables(BY_ID[id].res) }));
   const defaultRoles = {};
   const rr = lo.hiredDriver ? ["medic", "forage", "guard", "hunt"] : ["drive", "forage", "guard", "tend"];
   s.picked.forEach((id, i) => { defaultRoles[id] = rr[i] || (lo.hiredDriver ? "guard" : "drive"); });
@@ -868,9 +853,8 @@ function startJourney(s) {
     flags: { brinewall: null, highice: null, kasai: null, suishen: false }, stormSeen: false,
     valuables: {}, relics: [], items: {},
     reputation: 0, marks: {}, rumor: null, rumorDone: false,
-    xp: 0, level: 5,
     drift: {},
-    log: [{ t: `You roll out of Sandpoint with ${teamSize(lo.wagons)} ${ANIMALS[lo.animal].label.toLowerCase()}, ${lo.wagons} wagon${lo.wagons > 1 ? "s" : ""}, and Ameiko Kaijitsu's fate riding with you. Minkai lies fourteen hundred miles east, across the roof of the world. See her home.`, k: "start", day: 1 }],
+    log: [{ t: `You roll out of Tidewatch with ${teamSize(lo.wagons)} ${ANIMALS[lo.animal].label.toLowerCase()}, ${lo.wagons} wagon${lo.wagons > 1 ? "s" : ""}, and Akemi Ryoden's fate riding with you. the Jade Empire lies fourteen hundred miles east, across the roof of the world. See her home.`, k: "start", day: 1 }],
     pending: null, ferry: null, event: null, beat: null, battle: null, lastCheck: null,
     recentEvent: null, eventCooldown: 0,
     over: null, overWhy: "", ledger: null,
@@ -978,6 +962,7 @@ function advanceDay(s, mode = "travel") {
   upkeepAnimals(st, pace.condWear, tended);
   coldTick(st, coldFor(st));
   diseaseTick(st);
+  reapDead(st, "on the road", 0.4);
   relaxDrift(st);
   st.wagon = clamp(st.wagon - pace.wear * WAGONS[st.wagons].wearMul * 1.3 * (1 + st.weather.drag * 0.5), 0, 100);
   st.morale = clamp(st.morale + pace.morale - (st.weather.drag > 0.3 ? 2 : 0), 0, 100);
@@ -1003,9 +988,7 @@ function advanceDay(s, mode = "travel") {
     }
   } else {
     restorePools(st);
-    // a downed traveler is nursed back to consciousness overnight
-    st.party = st.party.map((p) => (p.hp <= 0 ? { ...p, hp: Math.round(p.maxHp * 0.3) } : p));
-    pushLog(st, `Day ${st.day}: you hold camp. Wounds close, the fallen are brought round, and spent prayers and spells return with the dawn.`, "info");
+    pushLog(st, `Day ${st.day}: you hold camp. Wounds close a little, and spent prayers and spells return with the dawn. But the fallen do not rise; the dead keep their own counsel.`, "info");
   }
 
   /* On the march, the road's skill challenges come first and combat fills the
@@ -1025,7 +1008,7 @@ function advanceDay(s, mode = "travel") {
   return st;
 }
 
-/* ---- Cold: the Crown of the World's true weapon. Burn whale-oil and wear
+/* ---- Cold: the Roof of the World's true weapon. Burn whale-oil and wear
    furs to hold it off; go unprotected and the party and team pay in blood.
    This is why you must provision furs and oil in the north before the ice. */
 function coldTick(st, cold) {
@@ -1107,11 +1090,11 @@ function winGame(st) {
   st.over = "win";
   const f = st.flags || {};
   const boons = [];
-  if (f.brinewall === "prepared") boons.push("the Amatatsu blessing carried unbroken to the throne");
-  if (f.suishen) boons.push("Suishen, the ancestral blade, waking in Ameiko's hand");
-  if (f.highice === "sheltered" || f.highice === "eye") boons.push("the Hungry Storm broken clean on the High Ice");
+  if (f.brinewall === "prepared") boons.push("the Imperial blessing carried unbroken to the throne");
+  if (f.suishen) boons.push("the ancestral blade, waking in Akemi's hand");
+  if (f.highice === "sheltered" || f.highice === "eye") boons.push("the Devouring Storm broken clean on the High Ice");
   const cargoVal = Object.entries(st.cargo).reduce((t, [g, q]) => t + (q > 0 ? q * sellPrice(st, ROUTE[st.legIndex], g) : 0), 0);
-  st.overWhy = "The Jade Regent falls, and the Five Storms with him. On the day Ameiko Kaijitsu takes the throne of Minkai, the long road you carried her down finally, truly ends.";
+  st.overWhy = "The Amber Regent falls, and the storm-lords with him. On the day Akemi Ryoden takes the throne of the Jade Empire, the long road you carried her down finally, truly ends.";
   st.ledger = { day: st.day, gold: st.res.gold, cargoVal, earned: st.earned, boons, flags: f };
   return st;
 }
@@ -1122,7 +1105,7 @@ function checkEnd(st) {
   if (st.party.every((p) => p.hp <= 0)) { st.over = "lose"; st.overWhy = "The last of the party falls on the road. The caravan is lost."; }
   else if (st.animals <= 0) { st.over = "lose"; st.overWhy = "The last beast is dead. A wagon with nothing to pull it goes nowhere."; }
   else if (st.wagon <= 0) { st.over = "lose"; st.overWhy = "The wagons finally break their backs. The cargo cannot go on."; }
-  else if (st.day >= STRAND_DAY) { st.over = "lose"; st.overWhy = "The season runs out beneath you. Hopelessly behind, the caravan is swallowed by the dark and the snow, and Ameiko's road ends here."; }
+  else if (st.day >= STRAND_DAY) { st.over = "lose"; st.overWhy = "The season runs out beneath you. Hopelessly behind, the caravan is swallowed by the dark and the snow, and Akemi's road ends here."; }
 }
 
 /* =============================== EVENTS ============================ */
@@ -1150,7 +1133,7 @@ const EVENTS = {
     ],
   },
   banditToll: {
-    title: "The Sanos Toll", where: (n) => n.name === "Grungir Forest",
+    title: "The Sanos Toll", where: (n) => n.name === "Ironwood",
     body: "Figures step from the pines. Their leader rests a hand on the lead beast. \"Road tax,\" he says, almost friendly. \"Fifty gold. Or we discuss it.\"",
     info: {
       Ranger: "Kass counts six in the trees, two more unseen. A fight is not free.",
@@ -1189,7 +1172,7 @@ const EVENTS = {
     ],
   },
   wisp: {
-    title: "Lights in the Fen", where: (n) => n.name === "Brinestump Marsh",
+    title: "Lights in the Fen", where: (n) => n.name === "Saltmire",
     body: "After dark a pale lantern bobs beyond the reeds, swaying like it wants to be followed. A drover has already risen to go toward it.",
     info: {
       Ranger: "Kass grabs his arm. \"That is no lantern. Will-o'-wisp. It feeds on the drowning.\"",
@@ -1207,7 +1190,7 @@ const EVENTS = {
     ],
   },
   mire: {
-    title: "Bogged Down", where: (n) => n.name === "Brinestump Marsh" || (n.type === "wild" && ZONES[n.zone].cold < 1),
+    title: "Bogged Down", where: (n) => n.name === "Saltmire" || (n.type === "wild" && ZONES[n.zone].cold < 1),
     body: "A wheel drops to the axle in black mud and will not come free. The whole caravan halts around it.",
     info: {
       Fighter: "Dram spits on his hands. \"Everybody push.\"",
@@ -1260,13 +1243,13 @@ const EVENTS = {
     ],
   },
   goblinFireworks: {
-    title: "Fireworks in the Reeds", where: (n) => n.name === "Brinestump Marsh",
-    body: "The Brinestump goblins have found a cache of Tian fireworks, and they are drunk on the noise. Rockets scream over the reeds; a stray one lands hissing under a wagon.",
+    title: "Fireworks in the Reeds", where: (n) => n.name === "Saltmire",
+    body: "The Brinestump goblins have found a cache of Eastern fireworks, and they are drunk on the noise. Rockets scream over the reeds; a stray one lands hissing under a wagon.",
     info: {
       Ranger: "Kass counts a full warren's worth, but goblins scatter if you break their nerve.",
       Bard: "Lem could out-sing the little maniacs; they love a show more than a fight.",
       Rogue: "Vex can snuff the cache before it takes a wagon with it.",
-      Wizard: "Ondrel notes the fireworks are Tian-made, worth good coin intact.",
+      Wizard: "Ondrel notes the fireworks are Eastern-made, worth good coin intact.",
       Barbarian: "Sura just wants to charge into the reeds roaring.",
     },
     options: [
@@ -1305,13 +1288,13 @@ const EVENTS = {
     ],
   },
   kami: {
-    title: "The Watcher in the Wood", where: (n) => n.name === "Forest of Spirits",
+    title: "The Watcher in the Wood", where: (n) => n.name === "Whispering Wood",
     body: "A fox with too many tails sits in the road and does not move. The air hums. This is a kami's wood, and it has questions about the strangers passing through it.",
     info: {
       Druid: "Yarrow bows low; she knows how to speak to a spirit of place.",
       Cleric: "Hayden offers respect, god to god's servant.",
       Bard: "Lem has a riddle-tongue the fox might enjoy.",
-      Monk: "Rook has trained beside Tian shrines; he knows the courtesies.",
+      Monk: "Rook has trained beside Eastern shrines; he knows the courtesies.",
     },
     options: [
       { id: "honor", label: "Show the proper courtesy (Druid/Monk/Cleric)", gate: ["Druid", "Monk", "Cleric"], skill: "diplomacy", dc: 15, outcomes: { good: { text: "The kami inclines its head, and the wood opens a hidden, easy path. It even leaves a gift of jade at the trailhead.", days: 0, morale: 4, cost: { gold: -60 } }, fail: { text: "It judges you neither friend nor foe, and simply lets you pass.", days: 0 }, bad: { text: "You give offense; the wood tangles around you and steals a day before it relents.", days: 1, morale: -2 } } },
@@ -1425,10 +1408,10 @@ const EVENTS = {
   skald: {
     title: "A Skald on the Road",
     where: (n) => n.zone === "linnorm",
-    body: "A wandering Ulfen skald falls in beside the wagons, harp on his back and a hundred sagas behind his teeth. He'll trade a song for a seat by your fire and news of the south.",
+    body: "A wandering Norr skald falls in beside the wagons, harp on his back and a hundred sagas behind his teeth. He'll trade a song for a seat by your fire and news of the south.",
     options: [
       { id: "song", label: "Ask for a saga", outcomes: { good: { text: "He gives you the whole tale of a linnorm's slaying, roared out over the tundra wind. The company is still humming it two days on.", days: 0, morale: 3 } } },
-      { id: "trade", label: "Trade him news of the south", outcomes: { good: { text: "You tell him of Sandpoint and the Varisian road; he files it away for a verse. A fair exchange between travelers.", days: 0, morale: 1 } } },
+      { id: "trade", label: "Trade him news of the south", outcomes: { good: { text: "You tell him of Tidewatch and the Westmarch road; he files it away for a verse. A fair exchange between travelers.", days: 0, morale: 1 } } },
       { id: "passkald", label: "Let him find another fire", outcomes: { good: { text: "You've a hard road and little time for songs. He shrugs, unoffended, and turns off toward the next steading.", days: 0 } } },
     ],
   },
@@ -1455,7 +1438,7 @@ const EVENTS = {
   monkroad: {
     title: "The Traveling Monk",
     where: (n) => n.zone === "tianxia",
-    body: "A monk in road-worn robes walks the same way you do, alms bowl at his belt, pace unhurried and endless. He greets you in the Tian manner and seems entirely content to share the miles in companionable quiet.",
+    body: "A monk in road-worn robes walks the same way you do, alms bowl at his belt, pace unhurried and endless. He greets you in the Eastern manner and seems entirely content to share the miles in companionable quiet.",
     options: [
       { id: "tea", label: "Halt and share tea with him", outcomes: { good: { text: "You brew a pot at the roadside. He speaks a little of the country ahead and the way of walking long roads, and the whole company rises from the tea calmer than it sat.", days: 0, morale: 3 } } },
       { id: "bow", label: "Exchange bows and walk together", outcomes: { good: { text: "No words needed. You walk a few miles in shared silence, and part with a bow. It costs nothing and leaves everyone lighter.", days: 0, morale: 1 } } },
@@ -1643,17 +1626,17 @@ function applyOutcome(st, r, ev) {
 }
 
 /* =============================== STORY BEATS ====================== */
-/* The three fixed pillars of Ameiko's road. Each is a class-flavored decision
+/* The three fixed pillars of Akemi's road. Each is a class-flavored decision
    that sets a persistent flag, then hands straight to that pillar's boss. HOW
    you meet the beat, prepared or rushed, sheltered or exposed, with the blade
    or without, rides forward as a real edge or handicap in the fight and colors
    the ending. These are do-or-die: a story boss lost or fled ends the run. */
 const BEATS = {
   brinewall: {
-    title: "The Vault of Brinewall",
-    body: "Brinewall's ruin claws at a grey sky. Beneath the broken keep lies the Amatatsu Seal, the heart of Ameiko's birthright, and something old and patient has guarded it these long years. How you go in will decide how you come out.",
+    title: "The Vault of Brackmoor",
+    body: "Brackmoor's ruin claws at a grey sky. Beneath the broken keep lies the Imperial Seal, the heart of Akemi's birthright, and something old and patient has guarded it these long years. How you go in will decide how you come out.",
     info: {
-      Rogue: "The vault wards are old Minkaian work. Give me the time and I'll unpick them clean.",
+      Rogue: "The vault wards are old imperial work. Give me the time and I'll unpick them clean.",
       Wizard: "Those sigils are Tian. I can read the safe path down, if you trust the reading.",
       Cleric: "The dead here are unquiet. A rite would let us pass without waking every one of them.",
       Paladin: "Consecrate the ground first. We walk down unafraid, or we don't walk down at all.",
@@ -1662,19 +1645,19 @@ const BEATS = {
     },
     options: [
       { id: "wards", label: "Unpick the vault wards", gate: "Rogue", skill: "disable", dc: 18 },
-      { id: "divine", label: "Read the Minkaian sigils for the safe path", gate: "Wizard", skill: "knowledge", dc: 17 },
+      { id: "divine", label: "Read the imperial sigils for the safe path", gate: "Wizard", skill: "knowledge", dc: 17 },
       { id: "rite", label: "Lay the restless dead to rest first", gate: ["Cleric", "Paladin"], skill: "heal", dc: 16 },
       { id: "force", label: "Force the seaward doors and press in", skill: "athletics", dc: 15 },
       { id: "rush", label: "No time, go straight in", rushed: true },
     ],
     boss: "brinewall",
     apply(st, opt, good) {
-      if (good) { st.flags.brinewall = "prepared"; st.flags.suishen = true; pushLog(st, "You reach the vault in good order. The Amatatsu Seal is recovered, and beside it, wrapped in oilcloth, the ancestral blade Suishen. Ameiko's hands shake as she lifts it, and the steel answers with a low, waking hum.", "good"); }
+      if (good) { st.flags.brinewall = "prepared"; st.flags.suishen = true; pushLog(st, "You reach the vault in good order. The Imperial Seal is recovered, and beside it, wrapped in oilcloth, the ancestral blade. Akemi's hands shake as she lifts it, and the steel answers with a low, waking hum.", "good"); }
       else { st.flags.brinewall = "rushed"; pushLog(st, "You snatch the Seal, but the guardian is upon you before you can search the vault, and there is no time to look for more.", "warn"); }
     },
   },
   highice: {
-    title: "The Hungry Storm",
+    title: "The Devouring Storm",
     body: "Ovorikheer Pass is the roof of the world, and the storm that lives here is no accident of weather, it hunts. Wind like knives, and something vast and cold turning at its heart. You must go into it; the only question is how.",
     info: {
       Druid: "This storm has a mind. I can find the still eye at its center, but read it wrong and it closes on us.",
@@ -1694,22 +1677,22 @@ const BEATS = {
     },
   },
   kasai: {
-    title: "The Throne of Minkai",
-    body: "Kasai at last. Beyond these walls sits the Jade Regent on a throne that is Ameiko's by blood, and the Five Storms coiled around him. The whole long road narrows to this. How do you come at the usurper?",
+    title: "The Throne of the Jade Empire",
+    body: "the Jade Capital at last. Beyond these walls sits the Amber Regent on a throne that is Akemi's by blood, and the storm-lords coiled around him. The whole long road narrows to this. How do you come at the usurper?",
     info: {
       Rogue: "Forget the front. I can get us past the guard and into the throne room before he knows we've come.",
       Bard: "The city hates him. Give me a day and I'll put a mob at your back and a song in their throats.",
-      Paladin: "Raise the people openly. Let Ameiko's face be the banner they rally to.",
+      Paladin: "Raise the people openly. Let Akemi's face be the banner they rally to.",
       Fighter: "Or we break the gate and are on the throne before the alarm is even up.",
     },
     options: [
       { id: "infiltrate", label: "Slip past the guard and strike the throne", gate: ["Rogue", "Ranger"], skill: "stealth", dc: 17 },
-      { id: "rally", label: "Rally the people of Kasai behind Ameiko", gate: ["Bard", "Paladin"], skill: "diplomacy", dc: 17 },
+      { id: "rally", label: "Rally the people of the Jade Capital behind Akemi", gate: ["Bard", "Paladin"], skill: "diplomacy", dc: 17 },
       { id: "storm", label: "Break the palace gate in one rush", skill: "athletics", dc: 16 },
     ],
     boss: "kasai",
     apply(st, opt, good) {
-      if (good) { st.flags.kasai = opt.id; pushLog(st, opt.id === "rally" ? "The city rises behind Ameiko's banner. You march on the palace with Kasai at your back." : opt.id === "infiltrate" ? "You slip the palace guard entirely and stand before the throne before the Regent knows you have come." : "You shatter the palace gate in a single furious charge and are upon the throne before the alarm is fully raised.", "good"); }
+      if (good) { st.flags.kasai = opt.id; pushLog(st, opt.id === "rally" ? "The city rises behind Akemi's banner. You march on the palace with the Jade Capital at your back." : opt.id === "infiltrate" ? "You slip the palace guard entirely and stand before the throne before the Regent knows you have come." : "You shatter the palace gate in a single furious charge and are upon the throne before the alarm is fully raised.", "good"); }
       else { st.flags.kasai = "botched"; pushLog(st, "The approach goes wrong. The palace rouses, and every oni within is waiting for you.", "warn"); }
     },
   },
@@ -1736,9 +1719,9 @@ function resolveBeat(s, optId) {
      return, and the worst wounds are bound. A boss should test the party, not
      merely finish off whatever the road left. */
   restorePools(st);
-  st.party = st.party.map((p) => p.hp > 0
-    ? { ...p, hp: clamp(p.hp + Math.ceil((p.maxHp - p.hp) * 0.6) + 3, 0, p.maxHp) }
-    : { ...p, hp: Math.round(p.maxHp * 0.4) });
+  st.party = st.party.map((p) => p.dead
+    ? p
+    : { ...p, hp: clamp(p.hp + Math.ceil((p.maxHp - p.hp) * 0.6) + 3, 0, p.maxHp) });
   st.battle = buildBossBattle(st, beat.boss);
   return st;
 }
@@ -1761,9 +1744,9 @@ function crossFerry(s, mode) {
   const ice = !!st.ferry.ice;
   const fee = ice ? 55 : 25;
   if (mode === "ferry") { // hire a guide / take the sure way over
-    if (st.res.gold < fee) { pushLog(st, `You cannot cover the ${ice ? "Aganhei guide's" : "ferryman's"} fee. You will have to make the crossing yourselves.`, "bad"); return st; }
+    if (st.res.gold < fee) { pushLog(st, `You cannot cover the ${ice ? "Frostroad guide's" : "ferryman's"} fee. You will have to make the crossing yourselves.`, "bad"); return st; }
     st.res.gold -= fee; st.day += 1; eatStores(st, 1); upkeepAnimals(st, 0, false); coldTick(st, coldFor(st)); relaxDrift(st);
-    pushLog(st, ice ? `An Aganhei guide leads the caravan safe through ${st.ferry.name} for ${fee} gp. A day gone, no blood spilt.` : `The ferry carries the caravan over the ${st.ferry.name} for ${fee} gp. Safe, a day gone.`, "arrive");
+    pushLog(st, ice ? `An Frostroad guide leads the caravan safe through ${st.ferry.name} for ${fee} gp. A day gone, no blood spilt.` : `The ferry carries the caravan over the ${st.ferry.name} for ${fee} gp. Safe, a day gone.`, "arrive");
     st.ferry = null; st.weather = rollWeather(st.day, ROUTE[st.legIndex].zone); checkEnd(st); return st;
   }
   const dc = 13 + (ice ? 5 : 0) + (st.weather.drag > 0.3 ? 3 : 0);
@@ -1789,17 +1772,27 @@ function resupply(s) {
   const goods = [["water", 100, 1], ["food", 100, 1], ["feed", 140, 1], ["medicine", 10, 6], ["ammo", 20, 1], ["repair", 20, 4]];
   const got = {}; let spent = 0;
   for (const [k, target, base] of goods) { const price = Math.max(1, Math.round(base * mul)); const want = Math.max(0, target - st.res[k]); const spendable = Math.max(0, st.res.gold - reserve); const can = Math.floor(spendable / price); const n = Math.min(want, can); if (n > 0) { st.res[k] += n; st.res.gold -= n * price; spent += n * price; got[k] = n; } }
-  st.morale = clamp(st.morale + 3, 0, 100);
-  // A stay in town is real rest: the fallen are nursed back onto their feet,
-  // wounds mend, injuries are properly set, and every daily ability refreshes.
-  const mended = mendInjuries(st);
-  st.party = st.party.map((p) => p.hp > 0
-    ? { ...p, hp: clamp(p.hp + Math.ceil((p.maxHp - p.hp) * 0.7) + 4, 0, p.maxHp) }
-    : { ...p, hp: Math.round(p.maxHp * 0.6) });
-  restorePools(st);
   st.rumorDone = false; // you can ask around again on a fresh visit
-  const parts = ["food", "water", "feed", "medicine", "ammo", "repair"].filter((k) => got[k]).map((k) => `+${got[k]} ${k}`).join(", ") || "found little worth buying";
-  pushLog(st, `You rest and resupply at ${node.name}${mul >= 2 ? " (northern prices, and steep)" : ""}: ${parts} for ${spent} gp. The company sleeps under a roof and wakes mended${mended ? "; broken bones are set and bound" : ""}. Purse: ${st.res.gold} gp.`, "arrive");
+  const parts = ["food", "water", "feed", "medicine", "ammo", "repair"].filter((k) => got[k]).map((k) => `+${got[k]} ${k}`).join(", ") || "nothing you needed";
+  pushLog(st, `You lay in supplies at ${node.name}${mul >= 2 ? " (northern prices, and steep)" : ""}: ${parts}${spent > 0 ? ` for ${spent} gp` : ""}. Purse: ${st.res.gold} gp.`, "arrive");
+  return st;
+}
+
+/* A proper stay under a roof: the living mend, injuries and fevers are seen to,
+   and every daily strength returns. It costs a full day, so it cannot be spun
+   for free the way a simple resupply once could. */
+function restAtTown(s) {
+  const node = ROUTE[s.legIndex]; if (!node.town) return s;
+  const st = { ...s, res: { ...s.res }, party: s.party.map((p) => ({ ...p })), log: [...s.log] };
+  st.day += 1;
+  eatStores(st, 1); upkeepAnimals(st, 0, true);
+  const mended = mendInjuries(st);
+  st.party = st.party.map((p) => p.dead ? p : { ...p, hp: clamp(p.hp + Math.ceil((p.maxHp - p.hp) * 0.8) + 5, 0, p.maxHp) });
+  restorePools(st);
+  st.morale = clamp(st.morale + 5, 0, 100);
+  st.weather = rollWeather(st.day, ROUTE[st.legIndex].zone);
+  pushLog(st, `The company takes a day's rest under a roof at ${node.name}. The living wake mended${mended ? ", their wounds and fevers seen to" : ""}${st.party.some((p) => p.dead) ? ". The fallen, though, still lie cold; a temple's rite or a new hand must answer that" : ""}.`, "arrive");
+  checkEnd(st);
   return st;
 }
 function sellCargo(s, good, qty) {
@@ -1981,7 +1974,7 @@ function moveUsable(actor, mv) { if (!mv) return false; if (mv.cost) for (const 
 
 function buildRoadBattle(st, encKey, mod = null, story = null) {
   const enc = ENCOUNTERS[encKey];
-  const party = st.party.map((p) => { const M = BY_ID[p.id]; const C = M.combat; return { uid: "p_" + p.id, id: p.id, name: M.name, cls: M.cls, side: "party", isPlayer: true, hp: p.hp, maxHp: p.maxHp, tempHp: 0, ac: C.ac, touch: C.touch, atk: C.atk, init: C.init, saves: { ...C.saves }, res: { ...p.res }, moves: activeMovesFor(p.id, st.level), statuses: [] }; });
+  const party = st.party.map((p) => { const M = BY_ID[p.id]; const C = M.combat; return { uid: "p_" + p.id, id: p.id, name: M.name, cls: M.cls, side: "party", isPlayer: true, hp: p.hp, maxHp: p.maxHp, tempHp: 0, ac: C.ac, touch: C.touch, atk: C.atk, init: C.init, saves: { ...C.saves }, res: { ...p.res }, moves: C.moves, statuses: [] }; });
   let n = 0; const foes = [];
   for (const [type, count] of enc.foes) for (let i = 0; i < count; i++) { const E = ENEMIES[type]; n++; foes.push({ uid: "f_" + n, id: type, name: E.name + (count > 1 ? " " + (i + 1) : ""), side: "foe", isPlayer: false, hp: E.hp, maxHp: E.hp, tempHp: 0, ac: E.ac, touch: E.touch, atk: E.atk + (mod && !E.boss ? 0 : 0), init: E.init, saves: { ...E.saves }, res: {}, moves: E.moves, boss: E.boss, statuses: [] }); }
   /* Story modifiers from how the party met the beat: a blessing, a head start,
@@ -2028,7 +2021,7 @@ function bossModsFromFlags(st, bossKey) {
   }
   return mod;
 }
-const BOSS_ENC = { brinewall: "bossBrinewall", highice: "bossStorm", kasai: "bossRegent" };
+const BOSS_ENC = { brinewall: "bossBrackmoor", highice: "bossStorm", kasai: "bossRegent" };
 function buildBossBattle(st, bossKey) {
   return buildRoadBattle(st, BOSS_ENC[bossKey], bossModsFromFlags(st, bossKey), bossKey);
 }
@@ -2079,6 +2072,7 @@ function finishBattle(state) {
   road.party = road.party.map((p) => { const c = b.combatants.find((x) => x.uid === "p_" + p.id); return c ? { ...p, hp: c.hp, res: { ...c.res } } : p; });
   road.res.medicine = b.supply.medicine;
   road.res.ammo = b.supply.ammo;
+  reapDead(road, "in the fighting", 0.22);
   if (b.bag) road.items = { ...b.bag }; // spent battle consumables carry back
   if (b.result === "win") {
     const enc = ENCOUNTERS[b.encId];
@@ -2087,7 +2081,6 @@ function finishBattle(state) {
     if (enc.loot) for (const [k, v] of Object.entries(enc.loot)) { if (road.res[k] !== undefined && v > 0) { road.res[k] += v; lootTxt += `, +${v} ${k}`; } }
     pushLog(road, `${b.story ? "The guardian falls" : "The foe is broken"}. You take ${enc.gold} gp from the field${lootTxt}.`, "good");
     const dr = rollDrops(road, b, enc);
-    grantXP(road, enc.gold);
     if (dr.valuables.length || dr.item || dr.relic) {
       const parts = [];
       if (dr.valuables.length) parts.push("you gather " + listJoin(dr.valuables.map((id) => VALUABLES[id].name)));
@@ -2098,15 +2091,15 @@ function finishBattle(state) {
     if (b.story) {
       road.battle = null;
       if (b.story === "kasai") return winGame(road);
-      pushLog(road, b.story === "brinewall" ? "Brinewall is yours. Ameiko's birthright is recovered, and the road north lies open." : "The Hungry Storm is broken. The High Ice lets you pass at last.", "arrive");
+      pushLog(road, b.story === "brinewall" ? "Brackmoor is yours. Akemi's birthright is recovered, and the road north lies open." : "The Devouring Storm is broken. The High Ice lets you pass at last.", "arrive");
       checkEnd(road); return road;
     }
   } else if (b.result === "fled") {
-    if (b.story) { road.battle = null; road.over = "lose"; road.overWhy = b.story === "kasai" ? "The company breaks before the Jade Regent and flees the throne room. Minkai stays in the tyrant's grip, and the long road was for nothing." : "You turn from the fight you came all this way to win. The quest falters here, and the caravan turns for home it will never reach in time."; return road; }
+    if (b.story) { road.battle = null; road.over = "lose"; road.overWhy = b.story === "kasai" ? "The company breaks before the Amber Regent and flees the throne room. the Jade Empire stays in the tyrant's grip, and the long road was for nothing." : "You turn from the fight you came all this way to win. The quest falters here, and the caravan turns for home it will never reach in time."; return road; }
     road.morale = clamp(road.morale - 4, 0, 100);
     pushLog(road, "You break contact and roll on, hearts pounding and nothing gained.", "warn");
   } else {
-    pushLog(road, b.story ? "The company is cut down before the guardian. Ameiko's road ends in blood." : "The company is overrun on the road.", "bad");
+    pushLog(road, b.story ? "The company is cut down before the guardian. Akemi's road ends in blood." : "The company is overrun on the road.", "bad");
   }
   road.battle = null;
   checkEnd(road);
@@ -2153,8 +2146,11 @@ function reducer(state, action) {
     case "BRANCH": return chooseBranch(state, action.opt);
     case "FERRY": return crossFerry(state, action.mode);
     case "RESUPPLY": return resupply(state);
+    case "REST_TOWN": return restAtTown(state);
     case "SELL": return sellCargo(state, action.good, action.qty);
     case "SELL_FINDS": return sellValuables(state);
+    case "RECRUIT": return recruitMember(state, action.newId);
+    case "RAISE": return raiseDead(state, action.id);
     case "RUMOR": return marketRumor(state);
     case "BUY": return buyGoods(state, action.good, action.qty);
     case "BEAT": return resolveBeat(state, action.opt);
@@ -2168,15 +2164,15 @@ function reducer(state, action) {
 const INTRO_START = "arrival";
 const INTRO = {
   arrival: {
-    stage: "The Rusty Dragon, Sandpoint. Rain on the shutters, and a fire kept low. Ameiko Kaijitsu sets down a lacquered box that has come a very long way.",
-    speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
-    body: "You've hauled goods the length of Varisia and back, they tell me, and never lost a wagon you meant to keep. Good. Because I need someone who can get a caravan somewhere no sane merchant would take one, and keep us alive doing it.",
+    stage: "The Salt Kettle, Tidewatch. Rain on the shutters, and a fire kept low. Akemi Ryoden sets down a lacquered box that has come a very long way.",
+    speaker: "Akemi Ryoden", role: "Innkeeper, and heir of the Jade Empire", art: "A",
+    body: "You've hauled goods the length of the Westmarch and back, they tell me, and never lost a wagon you meant to keep. Good. Because I need someone who can get a caravan somewhere no sane merchant would take one, and keep us alive doing it.",
     choices: [{ label: "Where are we going?", to: "job" }],
   },
   job: {
-    stage: "She opens the box. Inside: an old seal, a folded map that runs off the edge of the world, and a name written in Tian script.",
-    speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
-    body: "Minkai. On the far side of Tian Xia. A throne that's mine by blood sits under a usurper who calls himself the Jade Regent, and the only road home runs east, up to the Linnorm Kings, across the Crown of the World, and down into the Dragon Empires. Fourteen hundred miles, near enough.",
+    stage: "She opens the box. Inside: an old seal, a folded map that runs off the edge of the world, and a name written in Eastern script.",
+    speaker: "Akemi Ryoden", role: "Innkeeper, and heir of the Jade Empire", art: "A",
+    body: "the Jade Empire. On the far side of the Jade East. A throne that's mine by blood sits under a usurper who calls himself the Amber Regent, and the only road home runs east, up to the Wyrmkings, across the Roof of the World, and down into the Dragon Empires. Fourteen hundred miles, near enough.",
     choices: [
       { label: "That's a trade route as much as a quest.", to: "trade" },
       { label: "What's out there?", to: "catch" },
@@ -2184,20 +2180,20 @@ const INTRO = {
   },
   trade: {
     stage: "A wry almost-smile. She was a merchant's daughter before she was anyone's heir.",
-    speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
-    body: "It is. Fill the wagons in Sandpoint, buy furs and amber in Kalsgard, and every crate is worth more the farther east it rides, silk and jade sell for a fortune back the way we came. What we make on the road is ours; it's what buys guides and grain when the Crown tries to kill us. And it will try.",
+    speaker: "Akemi Ryoden", role: "Innkeeper, and heir of the Jade Empire", art: "A",
+    body: "It is. Fill the wagons in Tidewatch, buy furs and amber in Kalsmark, and every crate is worth more the farther east it rides, silk and jade sell for a fortune back the way we came. What we make on the road is ours; it's what buys guides and grain when the Crown tries to kill us. And it will try.",
     choices: [{ label: "What's out there?", to: "catch" }],
   },
   catch: {
     stage: "Her voice drops. The rain fills the quiet.",
-    speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
-    body: "Goblins in the Brinestump, first. A guardian in my own family's ruin at Brinewall. Then the north, and past it the Crown of the World, polar ice that eats caravans, and a living storm that guards the high pass. If we reach Minkai, the Five Storms and their Regent are waiting. Three trials, three monsters. You should know that going in.",
+    speaker: "Akemi Ryoden", role: "Innkeeper, and heir of the Jade Empire", art: "A",
+    body: "Goblins in the Brinestump, first. A guardian in my own family's ruin at Brackmoor. Then the north, and past it the Roof of the World, polar ice that eats caravans, and a living storm that guards the high pass. If we reach the Jade Empire, the storm-lords and their Regent are waiting. Three trials, three monsters. You should know that going in.",
     choices: [{ label: "Then you'll want a company you can trust.", to: "company" }],
   },
   company: {
     stage: "She slides a purse across the table. It thuds, honest and heavy.",
-    speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
-    body: "Four hands you'd want on a very bad night, someone to read wild country, someone to keep breath in the wounded, someone to end the arguments steel makes. Sandpoint's full of such folk tonight. Choose well. The road out here remembers a poor choice far longer than you will.",
+    speaker: "Akemi Ryoden", role: "Innkeeper, and heir of the Jade Empire", art: "A",
+    body: "Four hands you'd want on a very bad night, someone to read wild country, someone to keep breath in the wounded, someone to end the arguments steel makes. Tidewatch's full of such folk tonight. Choose well. The road out here remembers a poor choice far longer than you will.",
     choices: [
       { label: "I've run worse roads than this.", to: "muster_bold" },
       { label: "I'll take it careful, and take us all home.", to: "muster_wary" },
@@ -2206,19 +2202,19 @@ const INTRO = {
   },
   muster_bold: {
     stage: "She almost laughs.",
-    speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
+    speaker: "Akemi Ryoden", role: "Innkeeper, and heir of the Jade Empire", art: "A",
     body: "The Crown will put a price on that confidence soon enough. But I'll take it over fear. Muster your four, caravan-master, we roll out at first light.",
     choices: [{ label: "Assemble the company →", to: "party" }],
   },
   muster_wary: {
     stage: "She nods, slow and satisfied.",
-    speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
+    speaker: "Akemi Ryoden", role: "Innkeeper, and heir of the Jade Empire", art: "A",
     body: "Caution keeps caravans whole. I like it better than bravado. Muster your four, and mind the cold closer than the wolves.",
     choices: [{ label: "Assemble the company →", to: "party" }],
   },
   muster_greed: {
     stage: "A short, dry laugh, a merchant's laugh.",
-    speaker: "Ameiko Kaijitsu", role: "Innkeeper, and heir of Minkai", art: "A",
+    speaker: "Akemi Ryoden", role: "Innkeeper, and heir of the Jade Empire", art: "A",
     body: "Haul hard and sell high, then, and we'll both come out of this rich, if we come out of it. Muster your four; the season won't wait on us.",
     choices: [{ label: "Assemble the company →", to: "party" }],
   },
@@ -2237,5 +2233,5 @@ export {
   INTRO, INTRO_START, PACES, SKILL_LABEL, dfmt,
   VALUABLES, RELICS, ITEMS, relicFx, sellValuables,
   marketRumor, repFx, INJURIES, DISEASES, diseaseTick, maybeBreakdown, mendInjuries,
-  activeMovesFor, grantXP, MOVE_PROGRESSION, XP_THRESH, MAX_LEVEL,
+  reapDead, recruitMember, raiseDead, RAISE_FEE, RECRUIT_FEE, restAtTown,
 };
