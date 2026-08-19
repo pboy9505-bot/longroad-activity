@@ -824,14 +824,14 @@ function TitleScreen({ dispatch }) {
     <div className="anim" style={{ animation: "fadeUp .6s ease", textAlign: "center", padding: "14px 8px 8px", position: "relative", overflow: "hidden" }}>
       <div aria-hidden style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", pointerEvents: "none" }}><CompassRose size={240} /></div>
       <div style={{ position: "relative" }}>
-        <div className="sc" style={{ fontSize: 12, letterSpacing: ".28em", color: SEPIA, textTransform: "uppercase" }}>Pathfinder · the road to the Jade Empire</div>
+        <div className="sc" style={{ fontSize: 12, letterSpacing: ".28em", color: SEPIA, textTransform: "uppercase" }}>An expedition into winter · the road to the Jade Empire</div>
         <div className="disp" style={{ fontSize: "clamp(40px,7vw,66px)", fontWeight: 700, color: INK, letterSpacing: ".04em", lineHeight: 1.02, margin: "6px 0 4px" }}>The Long Road</div>
         <div className="sc" style={{ fontSize: 14, color: WAX, letterSpacing: ".06em" }}>Tidewatch to the Jade Capital · fourteen hundred miles · carry the heir home</div>
         <div style={{ display: "flex", justifyContent: "center", margin: "14px 0 4px" }}><WaxSeal /></div>
         <div style={{ maxWidth: 648, margin: "4px auto", textAlign: "left" }}>
           <p style={{ fontSize: 15.5, lineHeight: 1.62, color: INK2, marginBottom: 10 }}>
             <span className="disp" style={{ float: "left", fontSize: 54, lineHeight: 0.78, paddingRight: 10, paddingTop: 5, color: WAX }}>A</span>
-            throne on the far side of the world belongs to the innkeeper of Tidewatch, and the only way to it runs east, up through the Land of the Wyrmkings, over the polar ice of the Roof of the World, and down into the Dragon Empires of the Jade East. Fill your wagons, for every mile east makes the cargo worth more; the trade is what buys your passage through the cold. But the road has three guardians on it, and each one must be broken before Akemi Ryoden can take back the Jade Empire.
+            throne on the far side of the world belongs to the innkeeper of Tidewatch, and the only way to it runs east, up through the Land of the Wyrmkings, over the polar ice of the Roof of the World, and down into the far empires of the Jade East. Fill your wagons, for every mile east makes the cargo worth more; the trade is what buys your passage through the cold. But the road has three guardians on it, and each one must be broken before Akemi Ryoden can take back the Jade Empire.
           </p>
           <p style={{ fontSize: 15.5, lineHeight: 1.62, color: INK2 }}>
             Gather a company of four. Outfit your wagons. Read the weather, ration the feed, buy low and sell high, and settle what the road throws at you with word, coin, or steel. Cross the Crown, best the Devouring Storm and the oni that wait beyond, and set the heir on the Jade Throne.
@@ -840,6 +840,9 @@ function TitleScreen({ dispatch }) {
         <div style={{ margin: "12px auto 8px", display: "flex", justifyContent: "center" }}><RouteMap /></div>
         <button className="btn seal on" style={{ fontSize: 15, padding: "11px 28px", letterSpacing: ".06em" }} onClick={() => dispatch({ type: "BEGIN" })}>Take the offer →</button>
         <div className="sc" style={{ fontSize: 11, color: SEPIA, marginTop: 12 }}>a level-5 company · eleven to choose from · one road, one winter</div>
+        <div className="sc" style={{ fontSize: 9.5, color: SEPIA, opacity: 0.72, maxWidth: 560, margin: "14px auto 0", lineHeight: 1.5, textAlign: "center" }}>
+          The Long Road is an unofficial, independent work of fan-made game design, offered free and for fun. It is not published by, endorsed by, sponsored by, or affiliated with Paizo Inc. Its play is built on open tabletop roleplaying mechanics; the names of all people, places, powers, and things herein are original inventions or generic thematic stand-ins, and are not the proper names of any published setting, adventure, or product. No challenge to any trademark or copyright is intended.
+        </div>
       </div>
     </div>
   );
@@ -888,8 +891,8 @@ export default function App() {
         {s.phase !== "title" && (
           <>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-              <div className="disp" style={{ fontSize: 15, letterSpacing: ".18em", color: SEPIA, textTransform: "uppercase" }}>Pathfinder</div>
-              <div className="sc" style={{ fontSize: 11, color: SEPIA }}>the long road · a varisian expedition</div>
+              <div className="disp" style={{ fontSize: 15, letterSpacing: ".18em", color: SEPIA, textTransform: "uppercase" }}>The Long Road</div>
+              <div className="sc" style={{ fontSize: 11, color: SEPIA }}>the long road · a frontier expedition</div>
             </div>
             <hr className="rule" style={{ marginTop: 2 }} />
           </>

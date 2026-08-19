@@ -6,7 +6,7 @@
 
 
 /* =====================================================================
-   PATHFINDER - THE LONG ROAD
+   THE LONG ROAD
    Phase 7, Slice 4: the road and the battle become one book.
 
    New this slice, over the expedition frame:
@@ -53,7 +53,7 @@ const ZONES = {
   varisia: { label: "the Westmarch", cold: 0, forage: 1.0, blurb: "Temperate coast. The road is kind, the markets rich." },
   linnorm: { label: "The Wyrmking North", cold: 0.2, forage: 0.75, blurb: "Norr country, turning cold. The last real towns." },
   crown: { label: "The Roof of the World", cold: 1.0, forage: 0.12, blurb: "The polar ice. Nothing grows; the cold itself is the enemy." },
-  tianxia: { label: "the Jade East", cold: 0, forage: 0.85, blurb: "The Dragon Empires. Foreign, fertile, and full of silk." },
+  tianxia: { label: "the Jade East", cold: 0, forage: 0.85, blurb: "The far empires of the east. Foreign, fertile, and full of silk." },
 };
 
 /* --- The route: the canon Imperial road, Tidewatch to the Jade Empire. the Westmarch to
@@ -82,7 +82,7 @@ const ROUTE = [
   { name: "The High Ice", type: "wild", zone: "crown", beat: "highice", crossing: "Ovorikheer Pass", note: "The roof of the world. Ovorikheer Pass, and the storm that guards it." },
   { name: "Jaagiin", type: "town", zone: "crown", town: true, note: "A waystation where late caravans winter. The descent begins.",
     offers: { furs: 0.9, whaleoil: 0.85 }, market: { furs: 1.5, whaleoil: 1.45 } },
-  { name: "Eastgate", type: "city", zone: "tianxia", town: true, note: "Gateway to the Dragon Empires. Western goods cash out here at last.",
+  { name: "Eastgate", type: "city", zone: "tianxia", town: true, note: "Gateway to the far empires. Western goods cash out here at last.",
     offers: { silk: 0.6, jade: 0.64, tea: 0.6 },
     market: { furs: 1.8, amber: 1.9, glass: 1.7, reagents: 1.6, cloth: 1.5, iron: 1.4, whaleoil: 1.3 } },
   { name: "Whispering Wood", type: "wild", zone: "tianxia", note: "Kami and kitsune in the mist. Not all of it means you harm." },
@@ -142,7 +142,7 @@ const GOODS = {
   furs: { label: "Northern furs", base: 9, bulk: 2, note: "Cheap in Kalsmark; worth a fortune where no beast wears a coat." },
   amber: { label: "Kalsmark amber", base: 20, bulk: 1, note: "Scrimshaw charms of the Amber Quarter. Precious in the east." },
   whaleoil: { label: "Whale-oil", base: 7, bulk: 2, note: "Fuel and light. On the ice it is nearly life itself." },
-  silk: { label: "Eastern silk", base: 22, bulk: 1, note: "Featherlight luxury of the Dragon Empires." },
+  silk: { label: "Eastern silk", base: 22, bulk: 1, note: "Featherlight luxury of the far empires." },
   jade: { label: "Carved jade", base: 30, bulk: 1, note: "The wealth of the Jade Empire in a single crate." },
   tea: { label: "Eastern tea", base: 11, bulk: 1, note: "Bricks of pressed leaf, traded like coin." },
 };
@@ -2172,7 +2172,7 @@ const INTRO = {
   job: {
     stage: "She opens the box. Inside: an old seal, a folded map that runs off the edge of the world, and a name written in Eastern script.",
     speaker: "Akemi Ryoden", role: "Innkeeper, and heir of the Jade Empire", art: "A",
-    body: "the Jade Empire. On the far side of the Jade East. A throne that's mine by blood sits under a usurper who calls himself the Amber Regent, and the only road home runs east, up to the Wyrmkings, across the Roof of the World, and down into the Dragon Empires. Fourteen hundred miles, near enough.",
+    body: "the Jade Empire. On the far side of the Jade East. A throne that's mine by blood sits under a usurper who calls himself the Amber Regent, and the only road home runs east, up to the Wyrmkings, across the Roof of the World, and down into the far empires. Fourteen hundred miles, near enough.",
     choices: [
       { label: "That's a trade route as much as a quest.", to: "trade" },
       { label: "What's out there?", to: "catch" },
