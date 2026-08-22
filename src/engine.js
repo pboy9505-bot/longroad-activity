@@ -212,7 +212,7 @@ const ROSTER = [
     maxHp: 42, skills: { survival: 5, perception: 11, stealth: 9, heal: 4, athletics: 12, diplomacy: 4, disable: 3, knowledge: 6 },
     res: { ki: 4 }, kit: "Flurry of blows, a ki pool to spend, and feet that never tire.",
     best: ["guard", "scout"], tag: "Fast hands and faster feet; walks point and holds the rear.",
-    combat: { hp: 42, ac: 19, touch: 15, atk: 8, init: 5, saves: { fort: 6, ref: 8, will: 7 }, res: { ki: 4 }, moves: ["flurry", "stunningFist", "elementalFist", "craneStance"], role: "A blur of strikes who can stun a foe stone-still." } },
+    combat: { hp: 42, ac: 19, touch: 15, atk: 9, init: 5, saves: { fort: 6, ref: 8, will: 7 }, res: { ki: 4 }, moves: ["flurry", "stunningFist", "elementalFist", "craneStance"], role: "A blur of strikes who can stun a foe stone-still." } },
 
   { id: "ysolde", name: "Dame Ysolde", cls: "Paladin", blurb: "Sworn blade of Iomedae.",
     maxHp: 50, skills: { survival: 4, perception: 6, stealth: 1, heal: 10, athletics: 9, diplomacy: 10, disable: 1, knowledge: 7 },
@@ -265,7 +265,7 @@ const FORAGE_POOR = ["finds thin pickings", "comes back near empty-handed", "was
 const MOVES = {
   // -- Ranger (bow & beast) --
   aimedShot: { name: "Aimed Shot", kind: "attack", target: "enemy", atkBonus: 2, dmg: [1, 8, 4], desc: "A careful bowshot. Reliable." },
-  rapidShot: { name: "Rapid Shot", kind: "attack", target: "enemy", penalty: 2, extraHits: 1, dmg: [1, 8, 2], desc: "Two arrows, both at a penalty. Trade aim for volume." },
+  rapidShot: { name: "Rapid Shot", kind: "attack", target: "enemy", penalty: 1, extraHits: 1, dmg: [1, 8, 3], desc: "Two arrows in the time of one, at a slight cost to aim." },
   cripplingShot: { name: "Crippling Shot", kind: "attack", target: "enemy", dmg: [1, 6, 2], rider: { k: "crippled", dur: 2, atk: -2 }, desc: "A shot to the arm. The foe fights worse for it." },
   wolfMaul: { name: "Wolf: Maul", kind: "attack", target: "enemy", dmg: [1, 8, 3], rider: { k: "offguard", dur: 2, ac: -2, offguard: true, chance: 0.6 }, desc: "The companion drags a foe down and off-balance." },
   // -- Cleric (divine support) --
@@ -275,12 +275,12 @@ const MOVES = {
   searingLight: { name: "Searing Light", kind: "touch", target: "enemy", dmg: [3, 6, 0], cost: { spells2: 1 }, desc: "A lance of divine light." },
   // -- Rogue (finesse & guile) --
   rapierStrike: { name: "Rapier Strike", kind: "attack", target: "enemy", dmg: [1, 6, 4], desc: "A quick finesse thrust." },
-  sneakAttack: { name: "Sneak Attack", kind: "attack", target: "enemy", dmg: [1, 6, 4], sneak: [3, 6, 0], desc: "Devastating if the target is off-guard; else just a poke." },
+  sneakAttack: { name: "Sneak Attack", kind: "attack", target: "enemy", dmg: [1, 6, 4], sneak: [3, 6, 2], sneakChance: 0.5, desc: "The rogue finds an opening about half the time on its own, and always against an off-guard foe." },
   feint: { name: "Feint", kind: "debuff", target: "enemy", auto: true, status: { k: "offguard", dur: 2, ac: -2, offguard: true }, desc: "A bluff that leaves the foe open to a sneak attack." },
   alchemistFire: { name: "Alchemist's Fire", kind: "touch", target: "enemy", dmg: [1, 6, 1], rider: { k: "burning", dur: 2, dot: 3 }, desc: "A thrown flask. It keeps burning." },
   // -- Wizard (evocation) --
   magicMissile: { name: "Magic Missile", kind: "auto", target: "enemy", dmg: [3, 4, 3], cost: { spells1: 1 }, desc: "Three bolts of force. Never misses." },
-  scorchingRay: { name: "Scorching Ray", kind: "touch", target: "enemy", dmg: [4, 6, 0], cost: { spells2: 1 }, desc: "Twin rays of fire against touch defenses." },
+  scorchingRay: { name: "Scorching Ray", kind: "touch", target: "enemy", atkBonus: 5, dmg: [5, 6, 2], cost: { spells2: 1 }, desc: "Twin rays of fire that streak true against touch defences." },
   fireball: { name: "Fireball", kind: "save", target: "allEnemies", dmg: [6, 6, 0], save: "ref", dc: 16, half: true, cost: { spells3: 1 }, desc: "A blast that catches every foe. Reflex halves." },
   enfeeble: { name: "Ray of Enfeeblement", kind: "debuff", target: "enemy", touchHit: true, status: { k: "enfeebled", dur: 3, dmg: -3 }, cost: { spells1: 1 }, desc: "Saps a foe's strength; its blows land soft." },
   // -- Fighter (line-holder) --
@@ -289,8 +289,8 @@ const MOVES = {
   guardAlly: { name: "Shield the Line", kind: "buff", target: "allAllies", status: { k: "shielded", dur: 1, soak: 0.6 }, desc: "Raise shields; the party takes less until Dram's next turn." },
   sunder: { name: "Sunder Armour", kind: "attack", target: "enemy", dmg: [1, 8, 4], rider: { k: "sundered", dur: 2, ac: -2 }, desc: "Batter a foe's guard open for everyone." },
   // -- Barbarian (rage) --
-  rage: { name: "Rage", kind: "rage", target: "self", status: { k: "raging", dur: 5, atk: 2, dmg: 4, ac: -2 }, tempHp: 12, cost: { rage: 1 }, desc: "Enter a fury: harder hits, tougher hide, looser guard." },
-  recklessSwing: { name: "Reckless Swing", kind: "attack", target: "enemy", penalty: 3, dmg: [2, 6, 6], desc: "A huge, wild arc. Often misses; seldom forgiven when it lands." },
+  rage: { name: "Rage", kind: "rage", target: "self", status: { k: "raging", dur: 8, atk: 2, dmg: 5, ac: -2 }, tempHp: 18, cost: { rage: 1 }, desc: "Enter a fury: harder hits, a tough cushion of vigour, a looser guard. Lasts most of a fight." },
+  recklessSwing: { name: "Reckless Swing", kind: "attack", target: "enemy", penalty: 2, dmg: [2, 6, 7], desc: "A huge, wild arc. Less sure, but brutal when it lands." },
   charge: { name: "Ashlands Charge", kind: "attack", target: "enemy", dmg: [1, 12, 4], selfRider: { k: "exposed", dur: 1, ac: -2 }, desc: "Barrel in for a heavy hit, and leave yourself open." },
   roar: { name: "Intimidating Roar", kind: "debuff", target: "allEnemies", save: "will", dc: 14, status: { k: "frightened", dur: 2, atk: -2 }, desc: "A highland war-cry that shakes the whole enemy line." },
   // -- Bard (the hybrid) --
@@ -304,9 +304,9 @@ const MOVES = {
   callLightning: { name: "Call Lightning", kind: "save", target: "allEnemies", dmg: [4, 6, 0], save: "ref", dc: 16, half: true, cost: { spells3: 1 }, desc: "Bolts leap from a clouded sky across the whole enemy line. Reflex halves." },
   naturesBalm: { name: "Nature's Balm", kind: "heal", target: "ally", heal: [2, 8, 4], cost: { spells2: 1 }, desc: "Living green knits an ally's wounds." },
   // -- Monk (fist & ki) --
-  flurry: { name: "Flurry of Blows", kind: "attack", target: "enemy", penalty: 1, extraHits: 1, dmg: [1, 8, 3], desc: "A rain of unarmed strikes, each a shade less sure." },
-  stunningFist: { name: "Stunning Fist", kind: "attack", target: "enemy", dmg: [1, 8, 3], rider: { k: "stunned", dur: 2, skip: true, chance: 0.55 }, cost: { ki: 1 }, desc: "A strike to the nerve that can drop a foe where it stands." },
-  elementalFist: { name: "Elemental Fist", kind: "attack", target: "enemy", dmg: [2, 6, 3], cost: { ki: 1 }, desc: "Ki wreathes the fist in fire; a heavier blow." },
+  flurry: { name: "Flurry of Blows", kind: "attack", target: "enemy", extraHits: 1, dmg: [1, 8, 4], desc: "A rapid pair of unarmed strikes." },
+  stunningFist: { name: "Stunning Fist", kind: "attack", target: "enemy", atkBonus: 1, dmg: [1, 8, 4], rider: { k: "stunned", dur: 2, skip: true, chance: 0.72 }, cost: { ki: 1 }, desc: "A strike to the nerve that usually drops a foe where it stands." },
+  elementalFist: { name: "Elemental Fist", kind: "attack", target: "enemy", atkBonus: 1, dmg: [2, 6, 6], cost: { ki: 1 }, desc: "Ki wreathes the fist in fire; a heavy blow." },
   craneStance: { name: "Crane Stance", kind: "buff", target: "self", status: { k: "poised", dur: 3, ac: 2, soak: 0.85 }, desc: "A defensive posture; harder to land a blow on." },
   // -- Paladin (steel & mercy) --
   smiteEvil: { name: "Smite", kind: "attack", target: "enemy", atkBonus: 2, dmg: [1, 10, 10], cost: { smite: 1 }, desc: "A vow made steel; a heavy, sure blow against the worst foe." },
@@ -357,22 +357,22 @@ const ENEMIES = {
   skeleton: { name: "Skeleton", hp: 22, ac: 16, touch: 12, atk: 7, init: 5, saves: { fort: 1, ref: 3, will: 4 }, moves: ["foeClaw"] },
   boggard: { name: "Boggard", hp: 34, ac: 16, touch: 11, atk: 8, init: 2, saves: { fort: 6, ref: 3, will: 2 }, moves: ["foeStab", "foeTongue"] },
   // -- Wyrmking North --
-  raider: { name: "Norr Raider", hp: 34, ac: 17, touch: 12, atk: 9, init: 4, saves: { fort: 6, ref: 4, will: 3 }, moves: ["foeChop"] },
+  raider: { name: "Norr Raider", hp: 34, ac: 16, touch: 12, atk: 9, init: 4, saves: { fort: 6, ref: 4, will: 3 }, moves: ["foeChop"] },
   frostwolf: { name: "Frost Wolf", hp: 46, ac: 16, touch: 13, atk: 11, init: 8, saves: { fort: 8, ref: 7, will: 2 }, moves: ["foeBite"] },
-  huskarl: { name: "Linnorm Huskarl", hp: 58, ac: 19, touch: 12, atk: 12, init: 4, saves: { fort: 8, ref: 5, will: 5 }, moves: ["foeCleave", "foeChop"] },
+  huskarl: { name: "Linnorm Huskarl", hp: 58, ac: 18, touch: 12, atk: 12, init: 4, saves: { fort: 8, ref: 5, will: 5 }, moves: ["foeCleave", "foeChop"] },
   // -- Roof of the World --
-  icetroll: { name: "Ice Troll", hp: 56, ac: 17, touch: 11, atk: 11, init: 3, saves: { fort: 8, ref: 4, will: 4 }, moves: ["foeRime", "foeMaul2"] },
+  icetroll: { name: "Ice Troll", hp: 56, ac: 16, touch: 11, atk: 11, init: 3, saves: { fort: 8, ref: 4, will: 4 }, moves: ["foeRime", "foeMaul2"] },
   wendigo: { name: "Frost-Gaunt", hp: 38, ac: 16, touch: 14, atk: 10, init: 9, saves: { fort: 5, ref: 8, will: 6 }, moves: ["foeRime", "foeHowl"] },
   icewight: { name: "Ice-Bound Dead", hp: 30, ac: 15, touch: 12, atk: 8, init: 5, saves: { fort: 3, ref: 4, will: 6 }, moves: ["foeClaw", "foeHowl"] },
   yeti: { name: "Abominable Yeti", hp: 52, ac: 16, touch: 12, atk: 11, init: 5, saves: { fort: 8, ref: 5, will: 4 }, moves: ["foeMaul2", "foeFrostBreath"] },
   // -- the Jade East --
-  ronin: { name: "Masterless Ronin", hp: 40, ac: 19, touch: 13, atk: 11, init: 6, saves: { fort: 5, ref: 7, will: 4 }, moves: ["foeSlash", "foeStab"] },
-  onilesser: { name: "Lesser Oni", hp: 56, ac: 18, touch: 12, atk: 12, init: 5, saves: { fort: 7, ref: 5, will: 7 }, moves: ["foeOniClub", "foeCurse"] },
-  spiritbeast: { name: "Angry Kami", hp: 48, ac: 18, touch: 15, atk: 11, init: 8, saves: { fort: 6, ref: 8, will: 8 }, moves: ["foeRime", "foeDrain"] },
+  ronin: { name: "Masterless Ronin", hp: 40, ac: 18, touch: 13, atk: 11, init: 6, saves: { fort: 5, ref: 7, will: 4 }, moves: ["foeSlash", "foeStab"] },
+  onilesser: { name: "Lesser Oni", hp: 56, ac: 17, touch: 12, atk: 12, init: 5, saves: { fort: 7, ref: 5, will: 7 }, moves: ["foeOniClub", "foeCurse"] },
+  spiritbeast: { name: "Angry Kami", hp: 48, ac: 17, touch: 15, atk: 11, init: 8, saves: { fort: 6, ref: 8, will: 8 }, moves: ["foeRime", "foeDrain"] },
   // -- Bosses (fixed story battles) --
   bossBrackmoor: { name: "the Faceless Oni", hp: 104, ac: 20, touch: 12, atk: 12, init: 5, saves: { fort: 9, ref: 6, will: 9 }, moves: ["foeOniClub", "foeCurse", "foeMaul2", "foeRally"], boss: true },
   bossStorm: { name: "the Storm-Witch", hp: 108, ac: 20, touch: 15, atk: 11, init: 9, saves: { fort: 7, ref: 9, will: 11 }, moves: ["foeBolt", "foeStormcall", "foeRimeShield", "foeRime"], boss: true },
-  bossRegent: { name: "The Amber Regent", hp: 150, ac: 22, touch: 14, atk: 14, init: 7, saves: { fort: 11, ref: 8, will: 12 }, moves: ["foeJadeStrike", "foeInvoke", "foeStormcall", "foeCurse"], boss: true },
+  bossRegent: { name: "The Amber Regent", hp: 165, ac: 22, touch: 14, atk: 14, init: 7, saves: { fort: 11, ref: 8, will: 12 }, moves: ["foeJadeStrike", "foeInvoke", "foeStormcall", "foeCurse"], boss: true },
 };
 
 /* =============================== ENCOUNTERS ======================= */
@@ -401,7 +401,7 @@ const ENCOUNTERS = {
   // -- Fixed bosses --
   bossBrackmoor: { name: "the Faceless Oni", desc: "The oni guardian coiled in Brackmoor's vault.", foes: [["bossBrackmoor", 1], ["icewight", 1]], gold: 240, loot: { medicine: 3 }, boss: true },
   bossStorm: { name: "the Storm-Witch", desc: "The Devouring Storm, given a face at last.", foes: [["bossStorm", 1], ["wendigo", 1]], gold: 300, loot: { medicine: 3 }, boss: true },
-  bossRegent: { name: "The Amber Regent", desc: "The tyrant on the stolen throne, and his storm-lords.", foes: [["bossRegent", 1], ["onilesser", 1]], gold: 500, loot: { medicine: 4 }, boss: true },
+  bossRegent: { name: "The Amber Regent", desc: "The tyrant on the stolen throne, and his storm-lords.", foes: [["bossRegent", 1], ["onilesser", 2]], gold: 500, loot: { medicine: 4 }, boss: true },
 };
 
 /* --- Region-keyed ambush tables (weights are percentages, summing to 100). */
@@ -750,7 +750,7 @@ const memRes = (st, id, k) => { const p = st.party.find((x) => x.id === id); ret
    a death clock; it is a gentle ramp that darkens the weather and, crucially,
    makes a LATE arrival on the Roof of the World colder and deadlier. The ice
    itself is now the winter. A caravan hopelessly behind is stranded at day 200. */
-const STRAND_DAY = 285;
+const STRAND_DAY = 300;
 function seasonStage(day) {
   const sev = clamp((day - 20) / 120, 0, 1);
   let key = "open", label = "the season is young";
@@ -988,7 +988,7 @@ function advanceDay(s, mode = "travel") {
 
   let arrived = null;
   if (mode === "travel") {
-    const driveFactor = st.drivers === 0 ? 0.5 : st.drivers === 1 ? 0.9 : 1.05;
+    const driveFactor = st.drivers === 0 ? 0.55 : st.drivers === 1 ? 1.0 : 1.15;
     if (st.drivers === 0) { st.morale = clamp(st.morale - 3, 0, 100); pushLog(st, "No one on the reins; the caravan crawls and tempers fray.", "warn"); }
     const starveFactor = st.starving ? 0.88 : 1; // a hungry, thirsty party drags
     const miles = Math.max(4, Math.round(pace.miles * (1 - st.weather.drag) * teamSpeed(st) * driveFactor * starveFactor * WAGONS[st.wagons].speedMul) + relicFx(st).miles);
@@ -1987,7 +1987,7 @@ function performMove(b, actor, move, chosen) {
     return;
   }
   if (move.kind === "auto") { for (const t of tgts) { const dealt = applyDamage(b, t, dice(move.dmg) + statusMods(actor).dmg, "dmg"); logPush(b, `${actor.name}'s ${move.name} strikes ${t.name} for ${dealt}. It never misses.`, "hit"); } return; }
-  const sneakOn = move.sneak ? statusMods(tgts[0]).offguard : false;
+  const sneakOn = move.sneak ? (statusMods(tgts[0]).offguard || Math.random() < (move.sneakChance || 0)) : false;
   const primary = tgts[0];
   logPush(b, resolveHit(b, actor, move, primary, sneakOn), "hit");
   if (move.extraHits) for (let i = 0; i < move.extraHits; i++) if (primary.hp > 0 || move.target === "enemy") logPush(b, resolveHit(b, actor, move, primary, false), "hit");
