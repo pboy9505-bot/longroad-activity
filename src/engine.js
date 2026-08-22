@@ -110,9 +110,9 @@ const BRANCHES = {
 };
 
 const PACES = {
-  cautious: { label: "Cautious", miles: 13, wear: 0.4, morale: +1, ration: 1.0, condWear: 0, hint: "Easy on wagon and beasts. Slow." },
-  steady: { label: "Steady", miles: 22, wear: 0.8, morale: 0, ration: 1.0, condWear: 3, hint: "The dependable wagon pace." },
-  grueling: { label: "Grueling", miles: 24, wear: 2.0, morale: -2, ration: 1.3, condWear: 8, hint: "Fast, but it breaks wagons and tires beasts." },
+  cautious: { label: "Cautious", miles: 15, wear: 0.4, morale: +1, ration: 1.0, condWear: 0, hint: "Easy on wagon and beasts. Slow." },
+  steady: { label: "Steady", miles: 24, wear: 0.8, morale: 0, ration: 1.0, condWear: 3, hint: "The dependable wagon pace." },
+  grueling: { label: "Grueling", miles: 29, wear: 2.0, morale: -2, ration: 1.3, condWear: 8, hint: "Fast, but it breaks wagons and tires beasts." },
 };
 
 /* --- Draft animals: a real outfitting choice. speed/feed/hardy trade off.
@@ -750,7 +750,7 @@ const memRes = (st, id, k) => { const p = st.party.find((x) => x.id === id); ret
    a death clock; it is a gentle ramp that darkens the weather and, crucially,
    makes a LATE arrival on the Roof of the World colder and deadlier. The ice
    itself is now the winter. A caravan hopelessly behind is stranded at day 200. */
-const STRAND_DAY = 265;
+const STRAND_DAY = 285;
 function seasonStage(day) {
   const sev = clamp((day - 20) / 120, 0, 1);
   let key = "open", label = "the season is young";
@@ -870,21 +870,27 @@ function totalRemaining(s) {
 
 /* Stores: party food/water with §8 grace + nightly natural healing. */
 function eatStores(st, ration) {
+  const cap = provCap(st);
   const need = Math.max(1, Math.round(st.party.length * ration * (st.thrift ? 0.65 : 1)));
+  st.res.food = Math.min(st.res.food, cap.food); st.res.water = Math.min(st.res.water, cap.water);
+  let hungry = false, thirsty = false;
   if (st.res.food >= need) { st.res.food -= need; st.hungerDays = 0; }
-  else { st.res.food = 0; st.hungerDays++; if (st.hungerDays <= 3) { st.morale = clamp(st.morale - 3, 0, 100); pushLog(st, `Rations are gone; the party goes hungry (day ${st.hungerDays} of 3).`, "warn"); } else damageAll(st, roll(1, 4), "Starvation sets in"); }
+  else { st.res.food = 0; st.hungerDays++; hungry = true; st.morale = clamp(st.morale - 3, 0, 100); if (st.hungerDays <= 3) pushLog(st, `The rations are gone and the party goes hungry (day ${st.hungerDays}). Stomachs growl, and the miles come harder. Best to lay in food soon.`, "warn"); else { damageAll(st, roll(1, 3), "Hunger gnaws at the party"); pushLog(st, `Day ${st.hungerDays} without food. The party weakens; someone needs to hunt or you need to reach a town.`, "bad"); } }
   if (st.res.water >= need) { st.res.water -= need; st.thirstDays = 0; }
-  else { st.res.water = 0; st.thirstDays++; if (st.thirstDays <= 1) { st.morale = clamp(st.morale - 4, 0, 100); pushLog(st, "The water runs dry; throats parch.", "warn"); } else damageAll(st, roll(1, 6), "Thirst turns dangerous"); }
-  st.party = st.party.map((p) => (p.hp > 0 ? { ...p, hp: clamp(p.hp + 3, 0, p.maxHp) } : p));
+  else { st.res.water = 0; st.thirstDays++; thirsty = true; st.morale = clamp(st.morale - 4, 0, 100); if (st.thirstDays <= 2) pushLog(st, "The water runs dry and throats parch. Thirst is the quicker killer; find water fast.", "warn"); else { damageAll(st, roll(1, 4), "Thirst turns dangerous"); pushLog(st, `Day ${st.thirstDays} without water. The party is failing; you must find a stream or a town.`, "bad"); } }
+  st.starving = hungry || thirsty; // read by mileage: a hungry, thirsty party makes worse time
+  // A modest recovery on a fed, watered day; none while going without.
+  if (!hungry && !thirsty) st.party = st.party.map((p) => (p.hp > 0 && !p.dead ? { ...p, hp: clamp(p.hp + 2, 0, p.maxHp) } : p));
 }
 
 /* Animals: feed with teeth. Starved beasts lose condition, then are lost. */
 function upkeepAnimals(st, condWear, tended) {
+  st.res.feed = Math.min(st.res.feed, provCap(st).feed);
   const need = Math.round(st.animals * ANIMALS[st.animal].feed * (st.thrift ? 0.7 : 1));
   if (st.res.feed >= need) { st.res.feed -= need; st.feedDays = 0; if (!tended) st.animalCond = clamp(st.animalCond + 2, 0, 100); }
   else {
     st.res.feed = 0; st.feedDays++;
-    st.animalCond = clamp(st.animalCond - 9, 0, 100);
+    st.animalCond = clamp(st.animalCond - 5, 0, 100);
     st.morale = clamp(st.morale - 2, 0, 100);
     pushLog(st, pick(FEED_EMPTY), "warn");
   }
@@ -901,37 +907,48 @@ function damageAll(s, amt, why) {
 }
 
 /* Resolve today's role assignments into effects + set flags for the day. */
+/* How much food, water, and feed the caravan can carry. More wagons means more
+   room, which is one reason to run a second. Gathering and buying both cap here,
+   so you cannot stockpile early and coast. */
+function provCap(st) {
+  const w = st.wagons || 1;
+  return { food: 65 + 25 * w, water: 65 + 25 * w, feed: 55 + 25 * w };
+}
 function applyRoles(st) {
   let drivers = 0, guards = 0, scouted = false, tended = false, thrift = false;
+  let foragers = 0, hunters = 0;
+  const DIM = [1, 0.55, 0.3, 0.18]; // diminishing returns for stacking a gathering role
+  const cap = provCap(st);
   for (const p of st.party) {
-    if (p.hp <= 0) continue;
+    if (p.hp <= 0 || p.dead) continue;
     const M = BY_ID[p.id];
     const role = st.roles[p.id] || "drive";
     const fit = M.best.includes(role);
     if (role === "drive") { drivers++; continue; }
     if (role === "guard") { guards++; continue; }
     if (role === "scout") { const c = check(M.skills.perception, 13); if (c.tier !== "critfail") scouted = true; continue; }
-    if (role === "forage") { // FEED + WATER, a little less of each than a specialist would manage
+    if (role === "forage") { // FEED + WATER. Supplements the stores; will not sustain the caravan alone.
+      const dim = DIM[foragers] || 0.12; foragers++;
       const fz = (ZONES[ROUTE[st.legIndex].zone] || ZONES.varisia).forage;
       const c = check(M.skills.survival, 13);
-      const base = bandGain(c.tier, 18, 13, 5);
-      const graze = Math.round(base * fz * (ANIMALS[st.animal].cold >= 1.4 ? 1.4 : 1) * 0.8);
-      const wz = Math.max(0.55, fz); // snowmelt yields water even where fodder is barren
-      const water = Math.round(base * wz * 0.8);
-      st.res.feed = clamp(st.res.feed + graze, 0, 999);
-      st.res.water = clamp(st.res.water + water, 0, 999);
-      pushLog(st, (graze <= 1 && water <= 1) ? `${M.name} finds the frozen ground gives up almost nothing.` : `${M.name} works the land as you go: +${graze} feed, +${water} water.`, graze + water >= 16 ? "good" : graze + water > 0 ? "info" : "warn");
+      const base = bandGain(c.tier, 13, 9, 4) * dim;
+      const graze = Math.round(base * fz * (ANIMALS[st.animal].cold >= 1.4 ? 1.35 : 1) * 0.9);
+      const wz = Math.max(0.55, fz);
+      const water = Math.round(base * wz * 0.85);
+      st.res.feed = clamp(st.res.feed + graze, 0, cap.feed);
+      st.res.water = clamp(st.res.water + water, 0, cap.water);
+      pushLog(st, (graze < 1 && water < 1) ? `${M.name} works the land, but it gives up almost nothing here.` : `${M.name} works the land as you go: +${graze} feed, +${water} water${dim < 1 ? " (little left to gather after the others)" : ""}.`, graze + water >= 10 ? "good" : graze + water > 0 ? "info" : "warn");
       continue;
     }
-    if (role === "hunt") { // FOOD only, spend arrows for meat
+    if (role === "hunt") { // FOOD, at the cost of arrows. One hunter feeds the party but burns the ammo you also need for battle.
       const fz = (ZONES[ROUTE[st.legIndex].zone] || ZONES.varisia).forage;
-      if (st.res.ammo >= 2) { st.res.ammo -= 2; const c = check(Math.max(M.skills.survival, M.skills.perception), 14); const g = Math.round(bandGain(c.tier, 18, 12, 3) * Math.max(0.25, fz)); st.res.food = clamp(st.res.food + g, 0, 999); pushLog(st, g > 0 ? `${M.name} brings down game: +${g} food (-2 arrows).` : `${M.name} finds no game, and spends arrows chasing it.`, g >= 10 ? "good" : g > 0 ? "info" : "warn"); }
+      if (st.res.ammo >= 2) { const dim = DIM[hunters] || 0.12; hunters++; st.res.ammo -= 2; const c = check(Math.max(M.skills.survival, M.skills.perception), 14); const g = Math.round(bandGain(c.tier, 12, 8, 3) * Math.max(0.3, fz) * dim); st.res.food = clamp(st.res.food + g, 0, cap.food); pushLog(st, g > 0 ? `${M.name} brings down game: +${g} food (-2 arrows)${dim < 1 ? " (game is thin after the others)" : ""}.` : `${M.name} finds no game, and spends arrows chasing it.`, g >= 6 ? "good" : g > 0 ? "info" : "warn"); }
       else pushLog(st, `${M.name} has no arrows left to hunt.`, "warn");
       continue;
     }
     if (role === "tend") { tended = true; const c = check(Math.max(M.skills.survival, M.skills.heal), 13); const g = bandGain(c.tier, 22, 15, 6); st.animalCond = clamp(st.animalCond + g, 0, 100); pushLog(st, `${M.name} tends the team: the beasts settle${fit ? " under sure hands" : ""}.`, "info"); continue; }
     if (role === "repair") { if (st.res.repair >= 2) { st.res.repair -= 2; const c = check(Math.max(M.skills.athletics, M.skills.disable), 13); const g = bandGain(c.tier, 18, 13, 7); st.wagon = clamp(st.wagon + g, 0, 100); pushLog(st, `${M.name} works the frames and axles over: the wagons come back ${g} sounder for it, at a cost of two from the repair stock.`, g >= 10 ? "good" : "info"); } else pushLog(st, `${M.name} means to mend the wagons, but the repair stock is spent.`, "warn"); continue; }
-    if (role === "medic") { const c = check(M.skills.heal, 13); const h = bandGain(c.tier, 13, 9, 4); if (h > 0) { st.party = st.party.map((x) => (x.hp > 0 ? { ...x, hp: clamp(x.hp + h, 0, x.maxHp) } : x)); pushLog(st, `${M.name} binds wounds on the march: +${h} to all.`, "good"); } continue; }
+    if (role === "medic") { const c = check(M.skills.heal, 13); const h = bandGain(c.tier, 12, 8, 3); if (h > 0) { st.party = st.party.map((x) => (x.hp > 0 && !x.dead ? { ...x, hp: clamp(x.hp + h, 0, x.maxHp) } : x)); pushLog(st, `${M.name} binds wounds on the march: +${h} to all.`, "good"); } continue; }
     if (role === "quarter") { thrift = true; pushLog(st, `${M.name} keeps a tight account of the stores; little is wasted today.`, "info"); continue; }
   }
   st.drivers = drivers + (st.hiredDriver ? 1 : 0); st.guards = guards; st.scouted = scouted; st.thrift = thrift;
@@ -973,7 +990,8 @@ function advanceDay(s, mode = "travel") {
   if (mode === "travel") {
     const driveFactor = st.drivers === 0 ? 0.5 : st.drivers === 1 ? 0.9 : 1.05;
     if (st.drivers === 0) { st.morale = clamp(st.morale - 3, 0, 100); pushLog(st, "No one on the reins; the caravan crawls and tempers fray.", "warn"); }
-    const miles = Math.max(4, Math.round(pace.miles * (1 - st.weather.drag) * teamSpeed(st) * driveFactor * WAGONS[st.wagons].speedMul) + relicFx(st).miles);
+    const starveFactor = st.starving ? 0.88 : 1; // a hungry, thirsty party drags
+    const miles = Math.max(4, Math.round(pace.miles * (1 - st.weather.drag) * teamSpeed(st) * driveFactor * starveFactor * WAGONS[st.wagons].speedMul) + relicFx(st).miles);
     st.progress += miles;
     if (st.progress >= st.legMiles[st.legIndex]) {
       st.progress = 0; st.legIndex += 1;
@@ -1769,7 +1787,8 @@ function resupply(s) {
   const st = { ...s, res: { ...s.res }, log: [...s.log] };
   const mul = ZONE_COST[node.zone] || 1;
   const reserve = 40;
-  const goods = [["water", 100, 1], ["food", 100, 1], ["feed", 140, 1], ["medicine", 10, 6], ["ammo", 20, 1], ["repair", 20, 4]];
+  const cap = provCap(st);
+  const goods = [["water", cap.water, 1], ["food", cap.food, 1], ["feed", cap.feed, 1], ["medicine", 10, 6], ["ammo", 30, 1], ["repair", 20, 4]];
   const got = {}; let spent = 0;
   for (const [k, target, base] of goods) { const price = Math.max(1, Math.round(base * mul)); const want = Math.max(0, target - st.res[k]); const spendable = Math.max(0, st.res.gold - reserve); const can = Math.floor(spendable / price); const n = Math.min(want, can); if (n > 0) { st.res[k] += n; st.res.gold -= n * price; spent += n * price; got[k] = n; } }
   st.rumorDone = false; // you can ask around again on a fresh visit
@@ -2286,6 +2305,6 @@ export {
   INTRO, INTRO_START, PACES, SKILL_LABEL, dfmt,
   VALUABLES, RELICS, ITEMS, relicFx, sellValuables,
   marketRumor, repFx, INJURIES, DISEASES, diseaseTick, maybeBreakdown, mendInjuries,
-  reapDead, recruitMember, raiseDead, RAISE_FEE, RECRUIT_FEE, restAtTown,
+  reapDead, recruitMember, raiseDead, RAISE_FEE, RECRUIT_FEE, restAtTown, provCap,
   hitChance, moveDiceLabel, BASIC_STRIKE_DICE, STATUS_INFO, RES_LABELS,
 };

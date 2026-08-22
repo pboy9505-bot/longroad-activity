@@ -8,7 +8,7 @@ import {
   ZONES, ROUTE, ROSTER, BY_ID, EVENTS, BEATS, BRANCHES, GOODS, ANIMALS, WAGONS, ROLES, ROLE_ORDER,
   MOVES, ENEMIES, ENCOUNTERS, REGION_COMBAT, WILD_BY_ZONE, COMBAT_ITEMS, STRAND_DAY,
   VALUABLES, RELICS, ITEMS, relicFx, repFx, RAISE_FEE, RECRUIT_FEE,
-  hitChance, moveDiceLabel, BASIC_STRIKE_DICE, STATUS_INFO, RES_LABELS,
+  hitChance, moveDiceLabel, BASIC_STRIKE_DICE, STATUS_INFO, RES_LABELS, provCap,
   clamp, roll, startBuyPrice, SANDPOINT, ZONE_COST, DRIVER_FEE, DRIVER_WAGE, INTRO, INTRO_START, PACES, SKILL_LABEL, dfmt,
 } from "./engine.js";
 
@@ -655,9 +655,9 @@ function RoadScreen({ s, dispatch }) {
         <div style={{ display: "grid", gridTemplateColumns: "minmax(230px,1fr) minmax(300px,1.4fr) minmax(220px,1fr)", gap: 12, alignItems: "start" }}>
           <div>
             <Section title="Stores">
-              <Stat label="Food" value={s.res.food} sub={<Bar v={s.res.food} max={80} tint={MOSS} low={8} />} />
-              <Stat label="Water" value={s.res.water} sub={<Bar v={s.res.water} max={80} tint={FROST} low={8} />} />
-              <Stat label="Feed" value={s.res.feed} sub={<Bar v={s.res.feed} max={60} tint={GILT} low={6} />} />
+              <Stat label="Food" value={s.res.food} sub={<Bar v={s.res.food} max={provCap(s).food} tint={MOSS} low={8} />} />
+              <Stat label="Water" value={s.res.water} sub={<Bar v={s.res.water} max={provCap(s).water} tint={FROST} low={8} />} />
+              <Stat label="Feed" value={s.res.feed} sub={<Bar v={s.res.feed} max={provCap(s).feed} tint={GILT} low={6} />} />
               <div style={{ display: "flex", gap: 12, marginTop: 4 }} className="sc">
                 <span style={{ fontSize: 11, color: SEPIA }}>Med {s.res.medicine}</span>
                 <span style={{ fontSize: 11, color: SEPIA }}>Repair {s.res.repair}</span>
