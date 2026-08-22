@@ -8,6 +8,7 @@ import {
   ZONES, ROUTE, ROSTER, BY_ID, EVENTS, BEATS, BRANCHES, GOODS, ANIMALS, WAGONS, ROLES, ROLE_ORDER,
   MOVES, ENEMIES, ENCOUNTERS, REGION_COMBAT, WILD_BY_ZONE, COMBAT_ITEMS, STRAND_DAY,
   VALUABLES, RELICS, ITEMS, relicFx, repFx, RAISE_FEE, RECRUIT_FEE,
+  hitChance, moveDiceLabel, BASIC_STRIKE_DICE, STATUS_INFO, RES_LABELS,
   clamp, roll, startBuyPrice, SANDPOINT, ZONE_COST, DRIVER_FEE, DRIVER_WAGE, INTRO, INTRO_START, PACES, SKILL_LABEL, dfmt,
 } from "./engine.js";
 
@@ -57,6 +58,13 @@ function GlobalStyle() {
     .tok{ cursor:default; transition:transform .1s ease, box-shadow .12s ease; }
     .tok.sel:hover{ transform:translateY(-2px); }
     .fx{ position:absolute; font-family:'Cinzel',serif; font-weight:700; animation:floatUp 1s ease forwards; pointer-events:none; }
+    @media (max-width: 640px) {
+      .tome { padding: 12px 10px 30px !important; }
+      .tex-vignette { box-shadow: inset 0 0 30px rgba(74,48,20,.28) !important; }
+      .tex-lines { opacity: 0.3 !important; }
+      .card { background: rgba(255,250,235,.6) !important; }
+      .btn { padding: 10px 12px; }
+    }
     @keyframes floatUp{ 0%{opacity:0;transform:translateY(4px)} 20%{opacity:1} 100%{opacity:0;transform:translateY(-22px)} }
     @keyframes fadeUp{ from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
     @keyframes dieRoll{ 0%{transform:rotate(-10deg) scale(.85);opacity:0} 60%{transform:rotate(5deg) scale(1.06)} 100%{transform:rotate(0) scale(1);opacity:1} }
@@ -246,7 +254,7 @@ function HpBar({ c }) {
 function StatusChips({ c }) {
   if (!c.statuses.length) return null;
   return <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginTop: 3 }}>
-    {c.statuses.map((s, i) => { const good = (s.atk > 0 || s.dmg > 0 || (s.soak && s.soak < 1) || s.ac > 0); return <span key={i} className="sc" style={{ fontSize: 9, padding: "0 4px", borderRadius: 2, border: `1px solid ${good ? MOSS : WAX}`, color: good ? MOSS : WAX }}>{s.k}{s.dur > 1 ? " " + s.dur : ""}</span>; })}
+    {c.statuses.map((s, i) => { const good = (s.atk > 0 || s.dmg > 0 || (s.soak && s.soak < 1) || s.ac > 0); return <span key={i} title={STATUS_INFO[s.k] || s.k} className="sc" style={{ fontSize: 9, padding: "0 4px", borderRadius: 2, border: `1px solid ${good ? MOSS : WAX}`, color: good ? MOSS : WAX, cursor: "help" }}>{s.k}{s.dur > 1 ? " " + s.dur : ""}</span>; })}
   </div>;
 }
 function Fx({ fx, uid }) {
@@ -254,11 +262,12 @@ function Fx({ fx, uid }) {
   const col = fx.kind === "heal" ? MOSS : fx.kind === "crit" ? WAX : INK;
   return <span className="fx" style={{ color: col, left: "50%", top: -6, fontSize: fx.kind === "crit" ? 20 : 16 }}>{fx.kind === "heal" ? "+" : "−"}{fx.amount}{fx.kind === "crit" ? "!" : ""}</span>;
 }
-function Combatant({ c, selectable, onClick, fx, dim }) {
+function Combatant({ c, selectable, onClick, fx, dim, hitPct }) {
   return (
     <div className={"card tok" + (selectable ? " sel" : "")} onClick={selectable ? onClick : undefined}
       style={{ padding: "8px 10px", position: "relative", opacity: c.hp <= 0 ? 0.4 : dim ? 0.75 : 1, borderColor: selectable ? WAX : "rgba(74,58,36,.5)", boxShadow: selectable ? `0 0 0 1px ${WAX}` : undefined, cursor: selectable ? "pointer" : "default", filter: c.hp <= 0 ? "grayscale(1)" : undefined }}>
       <Fx fx={fx} uid={c.uid} />
+      {selectable && hitPct != null && <span className="sc disp" style={{ position: "absolute", top: 6, right: 8, fontSize: 12, color: hitPct >= 65 ? MOSS : hitPct >= 40 ? GILT : WAX }}>{hitPct}%</span>}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
         <span className="disp" style={{ fontSize: 13, color: c.boss ? WAX : INK }}>{c.name}{c.boss ? " ✦" : ""}</span>
         <span className="sc" style={{ fontSize: 11, color: c.hp <= 0 ? WAX : SEPIA }}>{c.hp <= 0 ? "down" : `${c.hp}/${c.maxHp}`}</span>
@@ -309,7 +318,7 @@ function CommandMenu({ b, dispatch }) {
   }
   if (b.ui.mode === "target") {
     return <div className="card" style={{ padding: 12 }}>
-      <div className="sc" style={{ fontSize: 12, color: WAX, marginBottom: 6 }}>Choose a target.</div>
+      <div className="sc" style={{ fontSize: 12, color: WAX, marginBottom: 6 }}>Choose a target. The percentage on each foe is your chance to hit.</div>
       <button className="btn seal" onClick={() => dispatch({ type: "BT_CANCEL" })}>← Back</button>
     </div>;
   }
@@ -330,7 +339,7 @@ function CommandMenu({ b, dispatch }) {
       </div>
       <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
         <button className="btn seal" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_OPEN_BAG" })} title="Use a draught, flask, or rare find from the satchel.">Item</button>
-        <button className="btn" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_STRIKE" })} title="A basic weapon attack, always available, never runs out. Your reliable option when spells, ki, or rage are spent.">Strike</button>
+        <button className="btn" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_STRIKE" })} title={`A basic weapon attack (${BASIC_STRIKE_DICE}), always available, never runs out. Your reliable option when spells, ki, or rage are spent.`}>Strike<span className="sc" style={{ fontSize: 9, color: SEPIA, display: "block" }}>{BASIC_STRIKE_DICE}</span></button>
         <button className="btn" style={{ flex: 1 }} onClick={() => dispatch({ type: "BT_FLEE" })} title="Try to break contact and escape the fight. Harder against more foes; fleeing a story boss loses the run.">Flee</button>
       </div>
       <div className="sc" style={{ fontSize: 10, color: SEPIA, marginTop: 8, fontStyle: "italic" }}>Hover a move for what it does. Draughts and flasks are drawn from the caravan's stores.</div>
@@ -345,6 +354,7 @@ function RoadBattle({ s, dispatch }) {
   const targeting = b.ui.mode === "target";
   const tSide = targeting ? (b.ui.pending.target === "enemy" ? "foe" : b.ui.pending.target === "ally" ? "party" : null) : null;
   const cur = b.awaiting ? getC(b, b.awaiting) : null;
+  const pendMove = targeting && b.ui.pending ? (b.ui.pending.kind === "strike" ? { kind: "attack" } : b.ui.pending.kind === "move" ? MOVES[b.ui.pending.id] : null) : null;
   return (
     <div className="card anim" style={{ padding: 14, animation: "fadeUp .35s ease", borderColor: WAX, borderWidth: 2 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
@@ -359,7 +369,7 @@ function RoadBattle({ s, dispatch }) {
       <div className="card" style={{ padding: "10px 12px", marginBottom: 10 }}>
         <div className="sc" style={{ fontSize: 11, color: WAX, marginBottom: 6, textTransform: "uppercase", letterSpacing: ".08em" }}>The foe</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 8 }}>
-          {foes.map((c) => <Combatant key={c.uid} c={c} fx={b.lastFx} selectable={targeting && tSide === "foe" && c.hp > 0} onClick={() => dispatch({ type: "BT_TARGET", uid: c.uid })} />)}
+          {foes.map((c) => <Combatant key={c.uid} c={c} fx={b.lastFx} selectable={targeting && tSide === "foe" && c.hp > 0} hitPct={targeting && tSide === "foe" && cur && pendMove ? hitChance(cur, c, pendMove) : null} onClick={() => dispatch({ type: "BT_TARGET", uid: c.uid })} />)}
         </div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 10, alignItems: "start" }}>
@@ -660,12 +670,14 @@ function RoadScreen({ s, dispatch }) {
               <Stat label="Morale" value={Math.round(s.morale)} sub={<Bar v={s.morale} max={100} tint={INDIGO} low={20} />} />
             </Section>
             <Section title="Company">
-              {s.party.map((p) => { const M = BY_ID[p.id]; return (
+              {s.party.map((p) => { const M = BY_ID[p.id]; const rkeys = Object.keys(p.res || {}).filter((k) => p.res[k] != null); return (
                 <div key={p.id} style={{ marginBottom: 6 }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 13 }}>{M.name} <span className="sc" style={{ fontSize: 10, color: p.dead ? WAX : p.injury || p.disease ? WAX : SEPIA }}>{p.dead ? "fallen" : p.disease ? p.disease : p.injury ? p.injury : M.cls}</span></span><span className="disp" style={{ fontSize: 12, color: p.hp <= 0 ? WAX : INK }}>{p.hp}/{p.maxHp}</span></div>
                   <Bar v={p.hp} max={p.maxHp} tint={WAX} low={0} />
+                  {!p.dead && rkeys.length > 0 && <div className="sc" style={{ fontSize: 9.5, color: SEPIA, marginTop: 2 }}>{rkeys.map((k) => `${RES_LABELS[k] || k} ${p.res[k]}`).join(" · ")}</div>}
                 </div>
               ); })}
+              <div className="sc" style={{ fontSize: 9.5, color: SEPIA, fontStyle: "italic", marginTop: 4, lineHeight: 1.4 }}>Spell slots, ki, rage, and the like are spent in battle and on the road, and refill on a night's camp or a town's rest.</div>
             </Section>
           </div>
 
@@ -883,9 +895,9 @@ export default function App() {
   return (
     <div className="tome" style={{ minHeight: "100%", position: "relative", padding: "22px 20px 40px", background: `radial-gradient(120% 90% at 15% 0%, #efe6cd 0%, ${VELLUM} 42%, ${VELLUM2} 100%)` }}>
       <GlobalStyle />
-      <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.5, background: "repeating-linear-gradient(0deg, rgba(120,90,50,.05) 0px, rgba(120,90,50,.05) 1px, transparent 1px, transparent 4px), radial-gradient(60% 40% at 80% 20%, rgba(120,90,50,.10), transparent 60%), radial-gradient(50% 40% at 10% 80%, rgba(90,60,30,.10), transparent 60%)" }} />
-      <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", boxShadow: "inset 0 0 90px rgba(74,48,20,.35), inset 0 0 12px rgba(74,48,20,.25)" }} />
-      <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: winter, transition: "opacity 1s ease", background: `radial-gradient(120% 100% at 50% -10%, transparent 55%, rgba(63,106,134,.18) 78%, rgba(63,106,134,.4) 100%)`, mixBlendMode: "multiply" }} />
+      <div aria-hidden className="tex-lines" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.5, background: "repeating-linear-gradient(0deg, rgba(120,90,50,.05) 0px, rgba(120,90,50,.05) 1px, transparent 1px, transparent 4px), radial-gradient(60% 40% at 80% 20%, rgba(120,90,50,.10), transparent 60%), radial-gradient(50% 40% at 10% 80%, rgba(90,60,30,.10), transparent 60%)" }} />
+      <div aria-hidden className="tex-vignette" style={{ position: "absolute", inset: 0, pointerEvents: "none", boxShadow: "inset 0 0 90px rgba(74,48,20,.35), inset 0 0 12px rgba(74,48,20,.25)" }} />
+      <div aria-hidden className="tex-winter" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: winter, transition: "opacity 1s ease", background: `radial-gradient(120% 100% at 50% -10%, transparent 55%, rgba(63,106,134,.18) 78%, rgba(63,106,134,.4) 100%)`, mixBlendMode: "multiply" }} />
 
       <div style={{ position: "relative", maxWidth: 1120, margin: "0 auto" }}>
         {s.phase !== "title" && (

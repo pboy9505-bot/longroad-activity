@@ -301,7 +301,7 @@ const MOVES = {
   // -- Druid (green magic & storm) --
   thornLash: { name: "Thorn Lash", kind: "attack", target: "enemy", dmg: [1, 8, 3], rider: { k: "snared", dur: 2, atk: -1, ac: -1 }, desc: "A whip of bramble that rakes and holds." },
   entangle: { name: "Entangle", kind: "debuff", target: "allEnemies", save: "ref", dc: 15, status: { k: "entangled", dur: 2, atk: -2, ac: -2 }, cost: { spells1: 1 }, desc: "Grasping roots foul the whole enemy line. Reflex resists." },
-  callLightning: { name: "Call Lightning", kind: "save", target: "enemy", dmg: [4, 6, 0], save: "ref", dc: 16, half: true, cost: { spells3: 1 }, desc: "A bolt out of a clear sky. Reflex halves." },
+  callLightning: { name: "Call Lightning", kind: "save", target: "allEnemies", dmg: [4, 6, 0], save: "ref", dc: 16, half: true, cost: { spells3: 1 }, desc: "Bolts leap from a clouded sky across the whole enemy line. Reflex halves." },
   naturesBalm: { name: "Nature's Balm", kind: "heal", target: "ally", heal: [2, 8, 4], cost: { spells2: 1 }, desc: "Living green knits an ally's wounds." },
   // -- Monk (fist & ki) --
   flurry: { name: "Flurry of Blows", kind: "attack", target: "enemy", penalty: 1, extraHits: 1, dmg: [1, 8, 3], desc: "A rain of unarmed strikes, each a shade less sure." },
@@ -1791,7 +1791,7 @@ function restAtTown(s) {
   restorePools(st);
   st.morale = clamp(st.morale + 5, 0, 100);
   st.weather = rollWeather(st.day, ROUTE[st.legIndex].zone);
-  pushLog(st, `The company takes a day's rest under a roof at ${node.name}. The living wake mended${mended ? ", their wounds and fevers seen to" : ""}${st.party.some((p) => p.dead) ? ". The fallen, though, still lie cold; a temple's rite or a new hand must answer that" : ""}.`, "arrive");
+  pushLog(st, `The company takes a day's rest under a roof at ${node.name}. The living wake mended${mended ? ", their wounds and fevers seen to" : ""}, and every spent spell, prayer, ki, and rage is restored${st.party.some((p) => p.dead) ? ". The fallen, though, still lie cold; a temple's rite or a new hand must answer that" : ""}.`, "arrive");
   checkEnd(st);
   return st;
 }
@@ -1846,6 +1846,59 @@ function statusMods(c) {
   for (const s of c.statuses) { atk += s.atk || 0; dmg += s.dmg || 0; ac += s.ac || 0; if (s.soak) soak *= s.soak; dot += s.dot || 0; if (s.skip) skip = true; if (s.offguard) offguard = true; }
   return { atk, dmg, ac, soak, dot, skip, offguard };
 }
+
+/* ---- Read-outs for the UI so the player can see the numbers behind combat. ---- */
+// Percent chance a given attack/touch move lands on a given target.
+function hitChance(actor, target, move) {
+  if (!actor || !target) return null;
+  if (move && (move.kind === "auto")) return 100;                 // never misses
+  if (move && !(move.kind === "attack" || move.kind === "touch" || move.touchHit)) return null; // saves/buffs/heals aren't to-hit
+  const am = statusMods(actor), tm = statusMods(target);
+  const mod = actor.atk + ((move && move.atkBonus) || 0) + am.atk - ((move && move.penalty) || 0);
+  const effAC = (((move && (move.kind === "touch" || move.touchHit)) ? target.touch : target.ac)) + tm.ac;
+  const need = effAC - mod;                                        // lowest d20 face that lands
+  let hits;
+  if (need <= 1) hits = 19;                                        // only a natural 1 misses
+  else if (need >= 21) hits = 1;                                   // only a natural 20 lands
+  else hits = 21 - need;
+  return Math.round(clamp(hits / 20, 0.05, 0.95) * 100);
+}
+// A move's damage/heal rendered as dice text, e.g. "2d8+4".
+function moveDiceLabel(move) {
+  const d = move.dmg || move.heal || (move.sneak ? move.sneak : null);
+  if (!d) return null;
+  const [n, faces, plus] = d;
+  return `${n}d${faces}${plus ? "+" + plus : ""}`;
+}
+const BASIC_STRIKE_DICE = "1d8+2";
+// What each combat status does, for tooltips.
+const STATUS_INFO = {
+  offguard: "Off-guard: AC lowered and open to a sneak attack.",
+  shielded: "Shielded: takes reduced damage until the shield-bearer's next turn.",
+  blessed: "Blessed: strikes truer (+2 to hit).",
+  inspired: "Inspired: hits harder and truer.",
+  heartened: "Heartened: steadied, a small bonus to hit.",
+  rallied: "Rallied: emboldened, hits harder and truer.",
+  stormblessed: "Storm-blessed: charged with power, harder-hitting.",
+  honed: "Honed: keener edges, extra damage for the fight.",
+  blurred: "Blurred: blows often strike an image instead of the real target.",
+  raging: "Raging: heavier hits and tougher, but guard is dropped (AC down).",
+  frightened: "Frightened: shaken, worse at hitting.",
+  crippled: "Crippled: a wounded arm, worse at hitting.",
+  snared: "Snared: fouled by growth, worse at hitting and defending.",
+  entangled: "Entangled: bound by roots, worse at hitting and defending.",
+  stunned: "Stunned: reeling, loses its next turn.",
+  burning: "Burning: takes fire damage at the start of each of its turns.",
+  bleeding: "Bleeding: loses blood each turn until it clots.",
+  exposed: "Exposed: wide open, AC lowered.",
+  defending: "Defending: braced, taking reduced damage.",
+};
+// Human labels for the per-character resource pools.
+const RES_LABELS = {
+  spells1: "1st-lvl slots", spells2: "2nd-lvl slots", spells3: "3rd-lvl slots",
+  ki: "Ki", rage: "Rage", channels: "Channels", performance: "Performance",
+  smite: "Smite", layOnHands: "Lay on Hands",
+};
 const living = (b, side) => b.combatants.filter((c) => c.side === side && c.hp > 0);
 const getC = (b, uid) => b.combatants.find((c) => c.uid === uid);
 const curUid = (b) => b.order[b.turnPtr];
@@ -2234,4 +2287,5 @@ export {
   VALUABLES, RELICS, ITEMS, relicFx, sellValuables,
   marketRumor, repFx, INJURIES, DISEASES, diseaseTick, maybeBreakdown, mendInjuries,
   reapDead, recruitMember, raiseDead, RAISE_FEE, RECRUIT_FEE, restAtTown,
+  hitChance, moveDiceLabel, BASIC_STRIKE_DICE, STATUS_INFO, RES_LABELS,
 };
